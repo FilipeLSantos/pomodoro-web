@@ -1,0 +1,154 @@
+.card {
+  width: 100%;
+  max-width: 280px;
+  padding: 20px;
+  border-radius: 22px;
+  border: 1.2px solid var(--glass-card-border);
+  background-image: var(--glass-info-bg);
+  backdrop-filter: var(--liquid-glass-backdrop);
+  -webkit-backdrop-filter: var(--liquid-glass-backdrop);
+  box-shadow: var(--glass-shadow), var(--liquid-glass-rim);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+}
+
+@supports (backdrop-filter: url('#liquid-glass-refraction')) {
+  .card {
+    backdrop-filter: var(--liquid-glass-backdrop-refract);
+  }
+}
+
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-accent-green);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.landmark {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(220, 232, 245, 0.95);
+  margin: 0;
+}
+
+.description {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: rgba(230, 238, 248, 0.9);
+  margin: 0;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.footer {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.region {
+  color: rgba(200, 215, 230, 0.8);
+}
+
+.nextButton {
+  background: transparent;
+  border: none;
+  padding: 2px 0;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.nextButton:hover {
+  text-decoration: underline;
+}
+
+.nextButton:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.mobileHeader {
+  display: none;
+}
+
+@media (max-width: 1080px) {
+  .card {
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    max-width: none;
+    padding: 15px 17px;
+    border-radius: 18px;
+    gap: 6px;
+  }
+
+  .eyebrow,
+  .title,
+  .landmark,
+  .divider,
+  .footer {
+    display: none;
+  }
+
+  .mobileHeader {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mobileTitle {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: var(--text-primary);
+    text-transform: uppercase;
+  }
+
+  .mobileAction {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-accent-green);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .description {
+    font-size: 12px;
+    line-height: 17px;
+  }
+}

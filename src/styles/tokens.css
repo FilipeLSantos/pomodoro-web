@@ -1,0 +1,98 @@
+:root {
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* Apple Glass Header Surfaces */
+  --glass-header-bg:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(255, 255, 255, 0.02) 45%,
+      rgba(255, 255, 255, 0.008) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(10, 14, 22, 0.24) 0%,
+      rgba(10, 14, 22, 0.24) 100%
+    );
+  --glass-header-blur: 12px;
+
+  /* Apple Glass Card Surfaces */
+  --glass-timer-bg:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.18) 0%,
+      rgba(255, 255, 255, 0.04) 45%,
+      rgba(255, 255, 255, 0.016) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(10, 14, 22, 0.28) 0%,
+      rgba(10, 14, 22, 0.28) 100%
+    );
+  --glass-tasks-bg:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0.03) 45%,
+      rgba(255, 255, 255, 0.012) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(10, 14, 22, 0.32) 0%,
+      rgba(10, 14, 22, 0.32) 100%
+    );
+  --glass-info-bg:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.16) 0%,
+      rgba(255, 255, 255, 0.04) 45%,
+      rgba(255, 255, 255, 0.016) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(10, 14, 22, 0.28) 0%,
+      rgba(10, 14, 22, 0.28) 100%
+    );
+
+  --glass-pill-bg: rgba(0, 0, 0, 0.25);
+  --glass-control-bg: rgba(255, 255, 255, 0.1);
+  --glass-control-hover-bg: rgba(255, 255, 255, 0.16);
+  --glass-control-active-bg: rgba(255, 255, 255, 0.94);
+
+  /* Borders & Shadows */
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --glass-border-subtle: rgba(255, 255, 255, 0.18);
+  --glass-card-border: rgba(255, 255, 255, 0.42);
+  --glass-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.34),
+    0 4px 12px rgba(0, 0, 0, 0.18);
+
+  /* Liquid Glass Optical Properties */
+  --liquid-glass-backdrop: blur(16px) saturate(1.45) brightness(1.05);
+  --liquid-glass-backdrop-refract:
+    url('#liquid-glass-refraction') blur(14px) saturate(1.45) brightness(1.05);
+  --liquid-glass-rim:
+    inset 0 1px 1px rgba(255, 255, 255, 0.48),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.12),
+    inset 1px 0 1px rgba(255, 255, 255, 0.18),
+    inset -1px 0 1px rgba(255, 255, 255, 0.1);
+  --liquid-glass-pill-rim:
+    inset 0 1px 0.5px rgba(255, 255, 255, 0.32),
+    inset 0 -1px 0.5px rgba(255, 255, 255, 0.08);
+
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #c8d7e6;
+  --text-soft: rgba(235, 242, 250, 0.9);
+  --text-muted: rgba(210, 222, 235, 0.85);
+  --text-on-light: #0c1016;
+  --text-accent-green: #86efac;
+  --text-danger-soft: rgba(254, 180, 180, 0.95);
+
+  /* Radii & Spacing */
+  --radius-pill: 20px;
+  --radius-chip: 18px;
+  --header-height-desktop: 72px;
+  --header-height-mobile: 48px;
+}
