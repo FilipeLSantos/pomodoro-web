@@ -9,6 +9,70 @@
   gap: 36px;
 }
 
+.noticeBanner {
+  width: 100%;
+  max-width: 740px;
+  padding: 12px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--glass-card-border);
+  background-image: var(--glass-info-bg);
+  backdrop-filter: var(--liquid-glass-backdrop);
+  -webkit-backdrop-filter: var(--liquid-glass-backdrop);
+  box-shadow: var(--glass-shadow), var(--liquid-glass-pill-rim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.noticeBannerWarning {
+  border-color: rgba(252, 165, 165, 0.5);
+}
+
+.noticeText {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-soft);
+}
+
+.noticeActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.noticeButton {
+  background: var(--glass-control-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 5px 12px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.noticeButton:hover {
+  background: var(--glass-control-hover-bg);
+}
+
+.noticeButtonDanger {
+  color: var(--text-danger-soft);
+  border-color: rgba(252, 165, 165, 0.35);
+}
+
+.confirmMessage {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+
 .topStage {
   width: 100%;
   display: grid;

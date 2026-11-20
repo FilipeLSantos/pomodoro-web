@@ -128,10 +128,11 @@ const PRIORITY_RANK: Record<TaskPriority, number> = {
 };
 
 const STATUS_RANK: Record<TaskStatus, number> = {
-  'Em execução': 0,
-  'A fazer': 1,
-  Backlog: 2,
-  Concluída: 3,
+  'A fazer': 0,
+  'Em execução': 1,
+  Concluída: 2,
+  Cancelada: 3,
+  Backlog: 4,
 };
 
 export function sortTasks(tasks: StudyTask[]): StudyTask[] {

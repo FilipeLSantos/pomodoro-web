@@ -20,6 +20,7 @@ const STATUS_CLASS: Record<TaskStatus, string> = {
   'A fazer': styles.statusTodo,
   Backlog: styles.statusMuted,
   Concluída: styles.statusMuted,
+  Cancelada: styles.statusMuted,
 };
 
 export function TasksPanel({

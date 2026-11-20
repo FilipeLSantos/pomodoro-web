@@ -10,172 +10,488 @@ import {
   INITIAL_TASKS,
   sortTasks,
 } from '../constants/pomodoroData';
+import {
+  DEFAULT_CYCLES_BEFORE_LONG_BREAK,
+  createActiveSession,
+  getPhaseDurationSeconds,
+  getRemainingSeconds,
+  pauseSession,
+  reconcileSessionWithNow,
+  resetSessionCycles,
+  resumeSession,
+  setSessionPhase,
+  skipSessionPhase,
+} from '../domain/sessionEngine';
 import { MainLayout } from '../layouts';
+import {
+  loadActiveSession,
+  loadPreferences,
+  loadPresets,
+  loadTasks,
+  saveActiveSession,
+  savePreferences,
+  savePresets,
+  saveTasks,
+} from '../storage/pomodoroStorage';
 import type { PresetOption } from '../types/header';
 import type {
+  ActiveSession,
   StudyTask,
   TaskPriority,
   TaskStatus,
   TimerPhase,
+  UiPreferences,
 } from '../types/pomodoro';
 import styles from './PomodoroPage.module.css';
-
-const CYCLES_BEFORE_LONG_BREAK = 4;
 
 const STATUS_SEQUENCE: TaskStatus[] = [
   'A fazer',
   'Em execução',
   'Concluída',
+  'Cancelada',
   'Backlog',
 ];
 
-function getPhaseDurationSeconds(
-  preset: PresetOption,
-  phase: TimerPhase
-): number {
-  switch (phase) {
-    case 'focus':
-      return preset.focusMinutes * 60;
-    case 'shortBreak':
-      return preset.shortBreakMinutes * 60;
-    case 'longBreak':
-      return preset.longBreakMinutes * 60;
+type ConfirmDialogState = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+} | null;
+
+function advanceStateCodeBySteps(currentCode: string, steps: number): string {
+  if (steps <= 0) {
+    return currentCode;
   }
+  const idx = BRAZILIAN_STATES_INFO.findIndex((s) => s.code === currentCode);
+  const safeIdx = idx >= 0 ? idx : 0;
+  const nextIdx = (safeIdx + steps) % BRAZILIAN_STATES_INFO.length;
+  return BRAZILIAN_STATES_INFO[nextIdx].code;
+}
+
+interface InitialBootstrapState {
+  presets: PresetOption[];
+  tasks: StudyTask[];
+  preferences: UiPreferences;
+  activeSession: ActiveSession | null;
+  resumedNotice: string | null;
+  corruptedSession: boolean;
+  storageError: string | null;
+}
+
+function loadInitialState(): InitialBootstrapState {
+  const now = Date.now();
+  const presetsResult = loadPresets(DEFAULT_PRESETS);
+  const tasksResult = loadTasks(sortTasks(INITIAL_TASKS));
+
+  const fallbackPrefs: UiPreferences = {
+    selectedPresetId: presetsResult.data[0].id,
+    selectedStateCode: 'RJ',
+    cycleSwitchEnabled: true,
+  };
+  const prefsResult = loadPreferences(fallbackPrefs);
+
+  const validSelectedPresetId = presetsResult.data.some(
+    (p) => p.id === prefsResult.data.selectedPresetId
+  )
+    ? prefsResult.data.selectedPresetId
+    : presetsResult.data[0].id;
+
+  const validSelectedStateCode = BRAZILIAN_STATES_INFO.some(
+    (s) => s.code === prefsResult.data.selectedStateCode
+  )
+    ? prefsResult.data.selectedStateCode
+    : 'RJ';
+
+  let preferences: UiPreferences = {
+    selectedPresetId: validSelectedPresetId,
+    selectedStateCode: validSelectedStateCode,
+    cycleSwitchEnabled: prefsResult.data.cycleSwitchEnabled,
+  };
+
+  const sessionResult = loadActiveSession();
+  let activeSession: ActiveSession | null = null;
+  let resumedNotice: string | null = null;
+
+  if (sessionResult.data) {
+    const reconciled = reconcileSessionWithNow(sessionResult.data, now);
+    activeSession = reconciled.session;
+
+    if (
+      preferences.cycleSwitchEnabled &&
+      reconciled.completedFocusPhases > 0
+    ) {
+      preferences = {
+        ...preferences,
+        selectedStateCode: advanceStateCodeBySteps(
+          preferences.selectedStateCode,
+          reconciled.completedFocusPhases
+        ),
+      };
+      savePreferences(preferences);
+    }
+
+    if (reconciled.phasesAdvanced > 0) {
+      saveActiveSession(activeSession);
+    }
+
+    if (activeSession.status === 'completed') {
+      resumedNotice =
+        'Todas as fases da sessão salva foram concluídas enquanto a página estava fechada.';
+    } else if (activeSession.status === 'paused') {
+      resumedNotice =
+        'Sessão pausada restaurada automaticamente do armazenamento local.';
+    } else {
+      resumedNotice =
+        'Sessão em andamento retomada automaticamente com base nos timestamps salvos.';
+    }
+  }
+
+  const storageError =
+    presetsResult.error ??
+    tasksResult.error ??
+    prefsResult.error ??
+    sessionResult.error ??
+    null;
+
+  return {
+    presets: presetsResult.data,
+    tasks: sortTasks(tasksResult.data),
+    preferences,
+    activeSession,
+    resumedNotice,
+    corruptedSession: sessionResult.corrupted,
+    storageError,
+  };
 }
 
 export function PomodoroPage() {
-  const [presets, setPresets] = useState<PresetOption[]>(DEFAULT_PRESETS);
-  const [selectedPresetId, setSelectedPresetId] = useState<string>(
-    DEFAULT_PRESETS[0].id
-  );
-  const [phase, setPhase] = useState<TimerPhase>('focus');
-  const [cycle, setCycle] = useState<number>(1);
-  const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [bootstrap] = useState<InitialBootstrapState>(loadInitialState);
 
-  const activePreset = useMemo(
-    () => presets.find((p) => p.id === selectedPresetId) ?? presets[0],
-    [presets, selectedPresetId]
+  const [presets, setPresets] = useState<PresetOption[]>(bootstrap.presets);
+  const [preferences, setPreferences] = useState<UiPreferences>(
+    bootstrap.preferences
+  );
+  const [tasks, setTasks] = useState<StudyTask[]>(bootstrap.tasks);
+  const [activeSession, setActiveSession] = useState<ActiveSession | null>(
+    bootstrap.activeSession
   );
 
-  const [secondsLeft, setSecondsLeft] = useState<number>(() =>
-    getPhaseDurationSeconds(DEFAULT_PRESETS[0], 'focus')
+  // Idle timer state when no active session exists
+  const [idlePhase, setIdlePhase] = useState<TimerPhase>('focus');
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
+
+  // Persistence notices
+  const [resumedNotice, setResumedNotice] = useState<string | null>(
+    bootstrap.resumedNotice
+  );
+  const [corruptedSession, setCorruptedSession] = useState<boolean>(
+    bootstrap.corruptedSession
+  );
+  const [storageError, setStorageError] = useState<string | null>(
+    bootstrap.storageError
   );
 
-  const [cycleSwitchEnabled, setCycleSwitchEnabled] = useState<boolean>(true);
-  const [selectedStateCode, setSelectedStateCode] = useState<string>('RJ');
-
-  const [tasks, setTasks] = useState<StudyTask[]>(() =>
-    sortTasks(INITIAL_TASKS)
-  );
+  // Confirmation modal state
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState>(null);
 
   // Preset modal state
   const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
   const [newPresetName, setNewPresetName] = useState('');
   const [newFocusMin, setNewFocusMin] = useState(25);
   const [newShortBreakMin, setNewShortBreakMin] = useState(5);
+  const [newCyclesBeforeLongBreak, setNewCyclesBeforeLongBreak] = useState(
+    DEFAULT_CYCLES_BEFORE_LONG_BREAK
+  );
   const [newLongBreakMin, setNewLongBreakMin] = useState(15);
 
   // Task modal state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [taskTitle, setTaskTitle] = useState('');
-  const [taskPriority, setTaskPriority] = useState<TaskPriority>('Alta');
-  const [taskStatus, setTaskStatus] = useState<TaskStatus>('A fazer');
+  const [taskPriority, setTaskPriority] = useState<TaskPriority>('Média');
+  const [taskStatus, setTaskStatus] = useState<TaskStatus>('Backlog');
+
+  const selectedPreset = useMemo(
+    () =>
+      presets.find((p) => p.id === preferences.selectedPresetId) ?? presets[0],
+    [presets, preferences.selectedPresetId]
+  );
+
+  // When a session is active, TimerCard displays the session's immutable snapshot (RN-05)
+  const displayedPreset = useMemo<PresetOption>(() => {
+    if (!activeSession) {
+      return selectedPreset;
+    }
+    const snap = activeSession.snapshotPreset;
+    return {
+      id: activeSession.presetId,
+      name: snap.name,
+      label: `${snap.name} (${snap.focusMinutes}/${snap.shortBreakMinutes}/${snap.longBreakMinutes})`,
+      focusMinutes: snap.focusMinutes,
+      shortBreakMinutes: snap.shortBreakMinutes,
+      cyclesBeforeLongBreak: snap.cyclesBeforeLongBreak,
+      longBreakMinutes: snap.longBreakMinutes,
+    };
+  }, [activeSession, selectedPreset]);
 
   const activeStateInfo = useMemo(
     () =>
-      BRAZILIAN_STATES_INFO.find((s) => s.code === selectedStateCode) ??
-      BRAZILIAN_STATES_INFO[0],
-    [selectedStateCode]
+      BRAZILIAN_STATES_INFO.find(
+        (s) => s.code === preferences.selectedStateCode
+      ) ?? BRAZILIAN_STATES_INFO[0],
+    [preferences.selectedStateCode]
   );
 
-  const handleNextState = useCallback(() => {
-    setSelectedStateCode((currentCode) => {
-      const idx = BRAZILIAN_STATES_INFO.findIndex(
-        (s) => s.code === currentCode
-      );
-      const nextIdx = (idx + 1) % BRAZILIAN_STATES_INFO.length;
-      return BRAZILIAN_STATES_INFO[nextIdx].code;
-    });
+  const persistPresets = useCallback((next: PresetOption[]) => {
+    setPresets(next);
+    const result = savePresets(next);
+    if (!result.ok) {
+      setStorageError(result.error);
+    }
   }, []);
 
-  const advancePhase = useCallback(() => {
-    setIsRunning(false);
-    if (phase === 'focus') {
-      if (cycleSwitchEnabled) {
-        handleNextState();
-      }
-      if (cycle >= CYCLES_BEFORE_LONG_BREAK) {
-        setPhase('longBreak');
-        setSecondsLeft(getPhaseDurationSeconds(activePreset, 'longBreak'));
-      } else {
-        setPhase('shortBreak');
-        setSecondsLeft(getPhaseDurationSeconds(activePreset, 'shortBreak'));
-      }
-    } else {
-      const nextCycle =
-        phase === 'longBreak' ? 1 : Math.min(cycle + 1, CYCLES_BEFORE_LONG_BREAK);
-      setCycle(nextCycle);
-      setPhase('focus');
-      setSecondsLeft(getPhaseDurationSeconds(activePreset, 'focus'));
+  const persistTasks = useCallback((next: StudyTask[]) => {
+    const sorted = sortTasks(next);
+    setTasks(sorted);
+    const result = saveTasks(sorted);
+    if (!result.ok) {
+      setStorageError(result.error);
     }
-  }, [activePreset, cycle, cycleSwitchEnabled, handleNextState, phase]);
+  }, []);
 
-  useEffect(() => {
-    if (!isRunning) {
-      return;
-    }
-
-    const timerId = window.setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          window.clearInterval(timerId);
-          advancePhase();
-          return 0;
+  const persistPreferences = useCallback(
+    (updater: (prev: UiPreferences) => UiPreferences) => {
+      setPreferences((prev) => {
+        const next = updater(prev);
+        const result = savePreferences(next);
+        if (!result.ok) {
+          setStorageError(result.error);
         }
-        return prev - 1;
+        return next;
       });
-    }, 1000);
+    },
+    []
+  );
 
-    return () => window.clearInterval(timerId);
-  }, [isRunning, advancePhase]);
+  const persistSession = useCallback((next: ActiveSession | null) => {
+    setActiveSession(next);
+    const result = saveActiveSession(next);
+    if (!result.ok) {
+      setStorageError(result.error);
+    }
+  }, []);
 
-  const handlePresetChange = (presetId: string) => {
-    if (isRunning) {
+  const handleNextState = useCallback(
+    (steps = 1) => {
+      persistPreferences((prev) => ({
+        ...prev,
+        selectedStateCode: advanceStateCodeBySteps(
+          prev.selectedStateCode,
+          steps
+        ),
+      }));
+    },
+    [persistPreferences]
+  );
+
+  const isRunning = activeSession?.status === 'running';
+  const currentPhase: TimerPhase = activeSession
+    ? activeSession.phase
+    : idlePhase;
+  const currentCycle = activeSession ? activeSession.cycle : 1;
+  const totalCyclesBeforeLongBreak =
+    displayedPreset.cyclesBeforeLongBreak ?? DEFAULT_CYCLES_BEFORE_LONG_BREAK;
+
+  const secondsLeft = activeSession
+    ? getRemainingSeconds(activeSession, nowMs)
+    : getPhaseDurationSeconds(
+        {
+          focusMinutes: selectedPreset.focusMinutes,
+          shortBreakMinutes: selectedPreset.shortBreakMinutes,
+          longBreakMinutes: selectedPreset.longBreakMinutes,
+        },
+        idlePhase
+      );
+
+  // Wall-clock timestamp tick while running (RNF-03, R-02)
+  useEffect(() => {
+    if (!activeSession || activeSession.status !== 'running') {
       return;
     }
+
+    const tick = () => {
+      const currentNow = Date.now();
+      setNowMs(currentNow);
+
+      if (currentNow >= activeSession.phaseEndsAt) {
+        const reconciled = reconcileSessionWithNow(activeSession, currentNow);
+        if (reconciled.phasesAdvanced > 0) {
+          persistSession(reconciled.session);
+          if (
+            preferences.cycleSwitchEnabled &&
+            reconciled.completedFocusPhases > 0
+          ) {
+            handleNextState(reconciled.completedFocusPhases);
+          }
+          if (reconciled.session.status === 'completed') {
+            setResumedNotice('Sessão concluída! Todos os ciclos foram finalizados.');
+          }
+        }
+      }
+    };
+
+    const timerId = window.setInterval(tick, 250);
+    return () => window.clearInterval(timerId);
+  }, [
+    activeSession,
+    handleNextState,
+    persistSession,
+    preferences.cycleSwitchEnabled,
+  ]);
+
+  const handleToggleRun = () => {
+    const currentNow = Date.now();
+    setNowMs(currentNow);
+    setResumedNotice(null);
+
+    if (!activeSession || activeSession.status === 'completed') {
+      const created = createActiveSession(
+        selectedPreset,
+        idlePhase,
+        1,
+        currentNow
+      );
+      persistSession(created);
+      return;
+    }
+
+    if (activeSession.status === 'running') {
+      persistSession(pauseSession(activeSession, currentNow));
+    } else {
+      persistSession(resumeSession(activeSession, currentNow));
+    }
+  };
+
+  // RN-02 / UC09: selecting another preset ends the current active session automatically
+  const handlePresetChange = (presetId: string) => {
     const nextPreset = presets.find((p) => p.id === presetId);
     if (!nextPreset) {
       return;
     }
-    setSelectedPresetId(presetId);
-    setSecondsLeft(getPhaseDurationSeconds(nextPreset, phase));
+    if (activeSession) {
+      persistSession(null);
+      setResumedNotice(null);
+    }
+    setIdlePhase('focus');
+    persistPreferences((prev) => ({
+      ...prev,
+      selectedPresetId: presetId,
+    }));
   };
 
   const handlePhaseChange = (nextPhase: TimerPhase) => {
-    setIsRunning(false);
-    setPhase(nextPhase);
-    setSecondsLeft(getPhaseDurationSeconds(activePreset, nextPhase));
+    const currentNow = Date.now();
+    setNowMs(currentNow);
+
+    if (activeSession && activeSession.status !== 'completed') {
+      persistSession(setSessionPhase(activeSession, nextPhase, currentNow));
+    } else {
+      setIdlePhase(nextPhase);
+    }
+  };
+
+  const handleSkipPhase = () => {
+    const currentNow = Date.now();
+    setNowMs(currentNow);
+    setResumedNotice(null);
+
+    if (!activeSession || activeSession.status === 'completed') {
+      const nextIdlePhase: TimerPhase =
+        idlePhase === 'focus'
+          ? 'shortBreak'
+          : idlePhase === 'shortBreak'
+            ? 'focus'
+            : 'focus';
+      setIdlePhase(nextIdlePhase);
+      return;
+    }
+
+    const skipped = skipSessionPhase(activeSession, currentNow);
+    if (skipped === null) {
+      persistSession(null);
+      setIdlePhase('focus');
+    } else {
+      persistSession(skipped);
+    }
   };
 
   const handleResetCycles = () => {
-    setIsRunning(false);
-    setCycle(1);
-    setPhase('focus');
-    setSecondsLeft(getPhaseDurationSeconds(activePreset, 'focus'));
+    if (!activeSession) {
+      setIdlePhase('focus');
+      return;
+    }
+
+    setConfirmDialog({
+      title: 'Reiniciar ciclos',
+      message:
+        'Deseja zerar a contagem de ciclos e retornar ao primeiro ciclo de foco?',
+      confirmLabel: 'Reiniciar ciclos',
+      onConfirm: () => {
+        const currentNow = Date.now();
+        setNowMs(currentNow);
+        persistSession(resetSessionCycles(activeSession, currentNow));
+        setResumedNotice(null);
+        setConfirmDialog(null);
+      },
+    });
   };
 
   const handleEndSession = () => {
-    setIsRunning(false);
-    setCycle(1);
-    setPhase('focus');
-    setSecondsLeft(getPhaseDurationSeconds(activePreset, 'focus'));
+    if (!activeSession) {
+      setIdlePhase('focus');
+      return;
+    }
+
+    setConfirmDialog({
+      title: 'Encerrar sessão',
+      message:
+        'Deseja encerrar a sessão atual e removê-la do armazenamento local?',
+      confirmLabel: 'Encerrar sessão',
+      onConfirm: () => {
+        persistSession(null);
+        setIdlePhase('focus');
+        setResumedNotice(null);
+        setConfirmDialog(null);
+      },
+    });
+  };
+
+  const handleDiscardResumedSession = () => {
+    setConfirmDialog({
+      title: 'Descartar sessão retomada',
+      message:
+        'Deseja descartar a sessão retomada sem contabilizar progresso? O preset voltará a ficar liberado.',
+      confirmLabel: 'Descartar sessão',
+      onConfirm: () => {
+        persistSession(null);
+        setIdlePhase('focus');
+        setResumedNotice(null);
+        setConfirmDialog(null);
+      },
+    });
+  };
+
+  const handleClearCorruptedSession = () => {
+    persistSession(null);
+    setCorruptedSession(false);
   };
 
   const openNewPresetModal = () => {
     setNewPresetName('');
     setNewFocusMin(25);
     setNewShortBreakMin(5);
+    setNewCyclesBeforeLongBreak(DEFAULT_CYCLES_BEFORE_LONG_BREAK);
     setNewLongBreakMin(15);
     setIsPresetModalOpen(true);
   };
@@ -186,17 +502,27 @@ export function PomodoroPage() {
     if (!trimmed) {
       return;
     }
+    const now = Date.now();
     const created: PresetOption = {
-      id: `custom-${Date.now()}`,
+      id: `custom-${now}`,
+      name: trimmed,
       label: `${trimmed} (${newFocusMin}/${newShortBreakMin}/${newLongBreakMin})`,
       focusMinutes: newFocusMin,
       shortBreakMinutes: newShortBreakMin,
+      cyclesBeforeLongBreak: newCyclesBeforeLongBreak,
       longBreakMinutes: newLongBreakMin,
+      createdAt: now,
+      updatedAt: now,
     };
-    setPresets((prev) => [...prev, created]);
-    setSelectedPresetId(created.id);
-    if (!isRunning) {
-      setSecondsLeft(getPhaseDurationSeconds(created, phase));
+    persistPresets([...presets, created]);
+
+    // Only switch immediately if no session is running; otherwise keep running session intact
+    if (!activeSession) {
+      persistPreferences((prev) => ({
+        ...prev,
+        selectedPresetId: created.id,
+      }));
+      setIdlePhase('focus');
     }
     setIsPresetModalOpen(false);
   };
@@ -204,8 +530,8 @@ export function PomodoroPage() {
   const openAddTaskModal = () => {
     setEditingTaskId(null);
     setTaskTitle('');
-    setTaskPriority('Alta');
-    setTaskStatus('A fazer');
+    setTaskPriority('Média');
+    setTaskStatus('Backlog');
     setIsTaskModalOpen(true);
   };
 
@@ -223,50 +549,62 @@ export function PomodoroPage() {
     if (!trimmed) {
       return;
     }
+    const now = Date.now();
     if (editingTaskId) {
-      setTasks((prev) =>
-        sortTasks(
-          prev.map((item) =>
-            item.id === editingTaskId
-              ? {
-                  ...item,
-                  title: trimmed,
-                  priority: taskPriority,
-                  status: taskStatus,
-                }
-              : item
-          )
+      persistTasks(
+        tasks.map((item) =>
+          item.id === editingTaskId
+            ? {
+                ...item,
+                title: trimmed,
+                priority: taskPriority,
+                status: taskStatus,
+                updatedAt: now,
+              }
+            : item
         )
       );
     } else {
       const created: StudyTask = {
-        id: `task-${Date.now()}`,
+        id: `task-${now}`,
         title: trimmed,
         priority: taskPriority,
         status: taskStatus,
+        createdAt: now,
+        updatedAt: now,
       };
-      setTasks((prev) => sortTasks([...prev, created]));
+      persistTasks([...tasks, created]);
     }
     setIsTaskModalOpen(false);
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setTasks((prev) => prev.filter((item) => item.id !== taskId));
+    const target = tasks.find((item) => item.id === taskId);
+    setConfirmDialog({
+      title: 'Excluir tarefa',
+      message: target
+        ? `Tem certeza que deseja excluir a tarefa "${target.title}"?`
+        : 'Tem certeza que deseja excluir esta tarefa?',
+      confirmLabel: 'Excluir',
+      onConfirm: () => {
+        persistTasks(tasks.filter((item) => item.id !== taskId));
+        setConfirmDialog(null);
+      },
+    });
   };
 
   const handleCycleTaskStatus = (taskId: string) => {
-    setTasks((prev) =>
-      sortTasks(
-        prev.map((item) => {
-          if (item.id !== taskId) {
-            return item;
-          }
-          const currentIdx = STATUS_SEQUENCE.indexOf(item.status);
-          const nextStatus =
-            STATUS_SEQUENCE[(currentIdx + 1) % STATUS_SEQUENCE.length];
-          return { ...item, status: nextStatus };
-        })
-      )
+    const now = Date.now();
+    persistTasks(
+      tasks.map((item) => {
+        if (item.id !== taskId) {
+          return item;
+        }
+        const currentIdx = STATUS_SEQUENCE.indexOf(item.status);
+        const nextStatus =
+          STATUS_SEQUENCE[(currentIdx + 1) % STATUS_SEQUENCE.length];
+        return { ...item, status: nextStatus, updatedAt: now };
+      })
     );
   };
 
@@ -274,36 +612,105 @@ export function PomodoroPage() {
     <MainLayout
       headerProps={{
         presets,
-        selectedPresetId: activePreset.id,
+        selectedPresetId: selectedPreset.id,
         onPresetChange: handlePresetChange,
         onNewPresetClick: openNewPresetModal,
-        cycleSwitchEnabled,
-        onCycleSwitchToggle: () => setCycleSwitchEnabled((prev) => !prev),
+        cycleSwitchEnabled: preferences.cycleSwitchEnabled,
+        onCycleSwitchToggle: () =>
+          persistPreferences((prev) => ({
+            ...prev,
+            cycleSwitchEnabled: !prev.cycleSwitchEnabled,
+          })),
         states: BRAZILIAN_STATES_INFO,
-        selectedStateCode,
-        onStateChange: setSelectedStateCode,
+        selectedStateCode: preferences.selectedStateCode,
+        onStateChange: (stateCode) =>
+          persistPreferences((prev) => ({
+            ...prev,
+            selectedStateCode: stateCode,
+          })),
       }}
     >
       <div className={styles.workspace}>
         <MobilePresetBar
           presets={presets}
-          selectedPresetId={activePreset.id}
+          selectedPresetId={selectedPreset.id}
           onPresetChange={handlePresetChange}
           onNewPresetClick={openNewPresetModal}
         />
 
+        {storageError && (
+          <div
+            className={`${styles.noticeBanner} ${styles.noticeBannerWarning}`}
+            role="alert"
+          >
+            <p className={styles.noticeText}>{storageError}</p>
+            <div className={styles.noticeActions}>
+              <button
+                type="button"
+                className={styles.noticeButton}
+                onClick={() => setStorageError(null)}
+              >
+                Dispensar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {corruptedSession && (
+          <div
+            className={`${styles.noticeBanner} ${styles.noticeBannerWarning}`}
+            role="alert"
+          >
+            <p className={styles.noticeText}>
+              Os dados da sessão anterior no armazenamento local estavam
+              corrompidos.
+            </p>
+            <div className={styles.noticeActions}>
+              <button
+                type="button"
+                className={`${styles.noticeButton} ${styles.noticeButtonDanger}`}
+                onClick={handleClearCorruptedSession}
+              >
+                Descartar dados inválidos
+              </button>
+            </div>
+          </div>
+        )}
+
+        {resumedNotice && activeSession && (
+          <div className={styles.noticeBanner} role="status">
+            <p className={styles.noticeText}>{resumedNotice}</p>
+            <div className={styles.noticeActions}>
+              <button
+                type="button"
+                className={styles.noticeButton}
+                onClick={() => setResumedNotice(null)}
+              >
+                Continuar
+              </button>
+              <button
+                type="button"
+                className={`${styles.noticeButton} ${styles.noticeButtonDanger}`}
+                onClick={handleDiscardResumedSession}
+              >
+                Descartar sessão
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className={styles.topStage}>
           <div className={styles.timerSlot}>
             <TimerCard
-              preset={activePreset}
-              phase={phase}
+              preset={displayedPreset}
+              phase={currentPhase}
               secondsLeft={secondsLeft}
               isRunning={isRunning}
-              cycle={cycle}
-              totalCyclesBeforeLongBreak={CYCLES_BEFORE_LONG_BREAK}
+              cycle={currentCycle}
+              totalCyclesBeforeLongBreak={totalCyclesBeforeLongBreak}
               onPhaseChange={handlePhaseChange}
-              onToggleRun={() => setIsRunning((prev) => !prev)}
-              onSkipPhase={advancePhase}
+              onToggleRun={handleToggleRun}
+              onSkipPhase={handleSkipPhase}
               onResetCycles={handleResetCycles}
               onEndSession={handleEndSession}
             />
@@ -312,7 +719,7 @@ export function PomodoroPage() {
           <div className={styles.infoSlot}>
             <StateInfoCard
               state={activeStateInfo}
-              onNextState={handleNextState}
+              onNextState={() => handleNextState(1)}
             />
           </div>
         </div>
@@ -341,6 +748,7 @@ export function PomodoroPage() {
             <input
               id="preset-name"
               type="text"
+              maxLength={40}
               className={modalStyles.input}
               placeholder="Ex.: Revisão Intensiva"
               value={newPresetName}
@@ -349,7 +757,7 @@ export function PomodoroPage() {
             />
           </div>
 
-          <div className={modalStyles.row}>
+          <div className={modalStyles.twoCol}>
             <div className={modalStyles.field}>
               <label htmlFor="preset-focus" className={modalStyles.label}>
                 Foco (min)
@@ -368,7 +776,7 @@ export function PomodoroPage() {
 
             <div className={modalStyles.field}>
               <label htmlFor="preset-short" className={modalStyles.label}>
-                Curta (min)
+                Pausa curta (min)
               </label>
               <input
                 id="preset-short"
@@ -385,14 +793,32 @@ export function PomodoroPage() {
             </div>
 
             <div className={modalStyles.field}>
+              <label htmlFor="preset-cycles" className={modalStyles.label}>
+                Ciclos antes da longa
+              </label>
+              <input
+                id="preset-cycles"
+                type="number"
+                min={1}
+                max={12}
+                className={modalStyles.input}
+                value={newCyclesBeforeLongBreak}
+                onChange={(event) =>
+                  setNewCyclesBeforeLongBreak(Number(event.target.value))
+                }
+                required
+              />
+            </div>
+
+            <div className={modalStyles.field}>
               <label htmlFor="preset-long" className={modalStyles.label}>
-                Longa (min)
+                Pausa longa (min)
               </label>
               <input
                 id="preset-long"
                 type="number"
                 min={1}
-                max={90}
+                max={60}
                 className={modalStyles.input}
                 value={newLongBreakMin}
                 onChange={(event) =>
@@ -431,6 +857,7 @@ export function PomodoroPage() {
             <input
               id="task-title"
               type="text"
+              maxLength={100}
               className={modalStyles.input}
               placeholder="Ex.: Resolver 10 exercícios de Física"
               value={taskTitle}
@@ -470,10 +897,11 @@ export function PomodoroPage() {
                   setTaskStatus(event.target.value as TaskStatus)
                 }
               >
-                <option value="Em execução">Em execução</option>
-                <option value="A fazer">A fazer</option>
                 <option value="Backlog">Backlog</option>
+                <option value="A fazer">A fazer</option>
+                <option value="Em execução">Em execução</option>
                 <option value="Concluída">Concluída</option>
+                <option value="Cancelada">Cancelada</option>
               </select>
             </div>
           </div>
@@ -491,6 +919,30 @@ export function PomodoroPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        title={confirmDialog?.title ?? ''}
+        isOpen={confirmDialog !== null}
+        onClose={() => setConfirmDialog(null)}
+      >
+        <p className={styles.confirmMessage}>{confirmDialog?.message}</p>
+        <div className={modalStyles.footer}>
+          <button
+            type="button"
+            className={modalStyles.cancelButton}
+            onClick={() => setConfirmDialog(null)}
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            className={modalStyles.submitButton}
+            onClick={() => confirmDialog?.onConfirm()}
+          >
+            {confirmDialog?.confirmLabel ?? 'Confirmar'}
+          </button>
+        </div>
       </Modal>
     </MainLayout>
   );

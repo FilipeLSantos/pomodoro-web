@@ -3,23 +3,29 @@ import type { BrazilianStateOption, PresetOption } from '../types/header';
 export const DEFAULT_PRESETS: PresetOption[] = [
   {
     id: 'classic-study',
+    name: 'Estudo Clássico',
     label: 'Estudo Clássico (25/5/15)',
     focusMinutes: 25,
     shortBreakMinutes: 5,
+    cyclesBeforeLongBreak: 4,
     longBreakMinutes: 15,
   },
   {
     id: 'deep-work',
+    name: 'Foco Profundo',
     label: 'Foco Profundo (50/10/20)',
     focusMinutes: 50,
     shortBreakMinutes: 10,
+    cyclesBeforeLongBreak: 4,
     longBreakMinutes: 20,
   },
   {
     id: 'sprint',
+    name: 'Sprint Rápido',
     label: 'Sprint Rápido (15/3/10)',
     focusMinutes: 15,
     shortBreakMinutes: 3,
+    cyclesBeforeLongBreak: 4,
     longBreakMinutes: 10,
   },
 ];
