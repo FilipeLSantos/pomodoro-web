@@ -1,0 +1,76 @@
+.bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .bar {
+    width: 100%;
+    height: 38px;
+    padding: 0 15px;
+    border-radius: 19px;
+    background: var(--glass-pill-bg);
+    border: 1px solid var(--glass-border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .selectGroup {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .selectWrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: none;
+    padding: 0 14px 0 0;
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+
+  .select option {
+    background: #141923;
+    color: #ffffff;
+  }
+
+  .caret {
+    position: absolute;
+    right: 0;
+    pointer-events: none;
+    font-size: 10px;
+    color: var(--text-primary);
+  }
+
+  .newButton {
+    background: transparent;
+    border: none;
+    padding: 4px 2px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-soft);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+}
