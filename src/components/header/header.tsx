@@ -1,6 +1,4 @@
 import { useId } from 'react';
-import brandDotDesktop from '../../assets/brand-dot.svg';
-import brandDotMobile from '../../assets/brand-dot-mobile.svg';
 import {DEFAULT_BRAZILIAN_STATES, DEFAULT_PRESETS } from '../../constants/header-defaults';
 import type { BrazilianStateOption, PresetOption } from '../../types/header';
 import styles from './header.module.css';
@@ -25,9 +23,6 @@ export interface HeaderProps {
 }
 
 export function Header({
-    brandName = 'POMODORO BRASIL',
-    brandHref = '/',
-    onBrandClick,
     presets = DEFAULT_PRESETS,
     selectedPresetId = DEFAULT_PRESETS[0].id,
     onPresetChange,
@@ -53,35 +48,6 @@ export function Header({
 
     return (
         <header className={headerClassName}>
-        <a
-            href={brandHref}
-            className={styles.brand}
-            aria-label={`${brandName} - Página inicial`}
-            onClick={(event) => {
-            if (onBrandClick) {
-                event.preventDefault();
-                onBrandClick();
-            }
-            }}
-        >
-            <img
-            src={brandDotDesktop}
-            alt=""
-            width={8}
-            height={8}
-            aria-hidden="true"
-            className={styles.dotDesktop}
-            />
-            <img
-            src={brandDotMobile}
-            alt=""
-            width={7}
-            height={7}
-            aria-hidden="true"
-            className={styles.dotMobile}
-            />
-            <span className={styles.brandTitle}>{brandName}</span>
-        </a>
 
         {showPresetSelector && (
             <div

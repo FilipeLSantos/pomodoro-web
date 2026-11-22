@@ -1,11 +1,11 @@
-import TasksPanel from "./components/TasksPanel/TasksPanel";
 import { LiquidGlassFilters } from "./components/LiquidGlassFilters/LiquidGlassFilters";
+import { PomodoroPage } from "./pages/pomodoro-page";
 
 function App() {
   return (
     <>
       <LiquidGlassFilters />
-      <TasksPanel />;
+      <PomodoroPage />
     </>
   );
 }
