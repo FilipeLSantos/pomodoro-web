@@ -5,3 +5,8 @@ export interface PresetOption {
   shortBreakMinutes: number;
   longBreakMinutes: number;
 }
+
+export interface BrazilianStateOption {
+  code: string;
+  name: string;
+}
