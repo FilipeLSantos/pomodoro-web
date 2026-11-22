@@ -3,32 +3,52 @@
   max-width: 740px;
   padding: 20px 24px;
   position: relative;
-  background-color: rgba(10, 14, 22, 0.32);
-  background-image: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.15),
-    rgba(255, 255, 255, 0.03) 45%,
-    rgba(255, 255, 255, 0.012)
-  );
-  backdrop-filter: blur(16px) saturate(1.45) brightness(1.05);
-  backdrop-filter: url("#liquid-glass-refraction") blur(14px) saturate(1.45)
-    brightness(1.05);
-  border: solid 1px rgba(255, 255, 255, 0.42);
+  background-image: var(--glass-tasks-bg);
+  backdrop-filter: var(--liquid-glass-backdrop);
+  -webkit-backdrop-filter: var(--liquid-glass-backdrop);
+  border: 1.2px solid var(--glass-card-border);
   border-radius: 20px;
-  box-shadow:
-    0 20px 44px rgba(0, 0, 0, 0.34),
-    inset 0 1px 1px rgba(255, 255, 255, 0.48);
+  box-shadow: var(--glass-shadow), var(--liquid-glass-rim);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+@supports (backdrop-filter: url("#liquid-glass-refraction")) {
+  .tasksPanel {
+    backdrop-filter: var(--liquid-glass-backdrop-refract);
+  }
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
 .tasksPanelTitle {
-  color: white;
+  color: var(--text-primary);
   font-size: 15px;
-  font-weight: bold;
-  margin: 6px 140px 12px 0;
+  font-weight: 700;
+  margin: 0;
+}
+
+.panelSubtitle {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .taskCard {
@@ -42,10 +62,16 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: background-color 0.15s ease;
 }
 
 .taskCard:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.taskCardCompleted {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .taskTitle {
@@ -55,6 +81,12 @@
   font-weight: 600;
   margin: 0;
   word-break: break-word;
+}
+
+.taskTitleCompleted {
+  color: rgba(242, 244, 247, 0.5);
+  text-decoration: line-through;
+  font-weight: 500;
 }
 
 .taskInfo {
@@ -145,22 +177,35 @@
 }
 
 .newTaskButton {
-  position: absolute;
-  top: 18px;
-  right: 24px;
+  flex-shrink: 0;
   width: auto;
   padding: 7px 14px;
   color: #1c2730;
+  font-family: var(--font-sans);
   font-size: 12px;
-  font-weight: bold;
+  font-weight: 700;
   border: none;
   border-radius: 16px;
   background-color: #f2f5f7;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
 }
 
 .newTaskButton:hover {
   background-color: white;
+}
+
+.newTaskButton:focus-visible,
+.taskButton:focus-visible,
+.statusButton:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.newTaskLabelMobile {
+  display: none;
 }
 
 .emptyTasks {
@@ -177,32 +222,46 @@
     border-radius: 16px;
   }
 
-  .tasksPanelTitle {
-    font-size: 15px;
-    margin-right: 0;
-    margin-bottom: 8px;
+  .panelHeader {
+    margin-bottom: 4px;
+  }
+
+  .panelSubtitle {
+    display: none;
   }
 
   .newTaskButton {
-    position: static;
-    width: 100%;
-    margin-bottom: 4px;
-    order: 2;
+    padding: 6px 14px;
+    font-size: 11px;
+  }
+
+  .newTaskLabelDesktop {
+    display: none;
+  }
+
+  .newTaskLabelMobile {
+    display: inline;
   }
 
   .taskCard {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     padding: 12px;
     gap: 8px;
   }
 
   .taskTitle {
+    flex: 1 1 100%;
     width: 100%;
   }
 
   .taskInfo {
     width: fit-content;
+  }
+
+  .editButton {
+    margin-left: auto;
   }
 
   .taskButton {

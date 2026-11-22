@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { PresetOption } from '../../types/header';
 import type { TimerPhase } from '../../types/pomodoro';
 import styles from './TimerCard.module.css';
@@ -36,6 +37,8 @@ export function TimerCard({
   onResetCycles,
   onEndSession,
 }: TimerCardProps) {
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
   const phaseItems: Array<{
     id: TimerPhase;
     desktopLabel: string;
@@ -57,6 +60,30 @@ export function TimerCard({
       mobileLabel: 'Longa',
     },
   ];
+
+  const handleTabKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    currentIndex: number
+  ) => {
+    let nextIndex: number | null = null;
+    if (event.key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % phaseItems.length;
+    } else if (event.key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + phaseItems.length) % phaseItems.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = phaseItems.length - 1;
+    }
+
+    if (nextIndex === null) {
+      return;
+    }
+    event.preventDefault();
+    const targetPhase = phaseItems[nextIndex];
+    onPhaseChange(targetPhase.id);
+    tabRefs.current[nextIndex]?.focus();
+  };
 
   return (
     <section className={styles.card} aria-label="Temporizador Pomodoro">
@@ -81,20 +108,25 @@ export function TimerCard({
       </div>
 
       <div className={styles.phaseTabs} role="tablist" aria-label="Fases do Pomodoro">
-        {phaseItems.map((item) => {
+        {phaseItems.map((item, index) => {
           const isActive = item.id === phase;
           return (
             <button
               key={item.id}
+              ref={(el) => {
+                tabRefs.current[index] = el;
+              }}
               type="button"
               role="tab"
               aria-selected={isActive}
+              tabIndex={isActive ? 0 : -1}
               className={
                 isActive
                   ? `${styles.phaseTab} ${styles.phaseTabActive}`
                   : styles.phaseTab
               }
               onClick={() => onPhaseChange(item.id)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
             >
               <span className={styles.phaseLabelDesktop}>
                 {item.desktopLabel}

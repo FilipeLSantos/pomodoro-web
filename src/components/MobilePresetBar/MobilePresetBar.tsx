@@ -7,6 +7,7 @@ export interface MobilePresetBarProps {
   selectedPresetId: string;
   onPresetChange: (presetId: string) => void;
   onNewPresetClick: () => void;
+  isPresetLocked?: boolean;
 }
 
 export function MobilePresetBar({
@@ -14,6 +15,7 @@ export function MobilePresetBar({
   selectedPresetId,
   onPresetChange,
   onNewPresetClick,
+  isPresetLocked = false,
 }: MobilePresetBarProps) {
   const selectId = useId();
 
@@ -28,6 +30,8 @@ export function MobilePresetBar({
             id={selectId}
             className={styles.select}
             value={selectedPresetId}
+            disabled={isPresetLocked}
+            aria-disabled={isPresetLocked}
             onChange={(event) => onPresetChange(event.target.value)}
           >
             {presets.map((preset) => (
@@ -45,6 +49,7 @@ export function MobilePresetBar({
       <button
         type="button"
         className={styles.newButton}
+        disabled={isPresetLocked}
         onClick={onNewPresetClick}
       >
         + Novo

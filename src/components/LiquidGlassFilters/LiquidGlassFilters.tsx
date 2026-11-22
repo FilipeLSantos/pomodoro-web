@@ -1,6 +1,18 @@
 export function LiquidGlassFilters() {
   return (
-    <svg width="0" height="0" aria-hidden="true" focusable="false">
+    <svg
+      width="0"
+      height="0"
+      aria-hidden="true"
+      focusable="false"
+      style={{
+        position: 'absolute',
+        width: 0,
+        height: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+      }}
+    >
       <defs>
         <filter
           id="liquid-glass-refraction"

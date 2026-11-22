@@ -18,7 +18,7 @@ export function StateInfoCard({state, onNextState}:StateInfoCardProps){
                     className={styles.mobileAction}
                     onClick={onNextState}
                 >
-                    Trocar Estado
+                    Trocar estado →
                 </button>
             </div>
 
@@ -36,7 +36,7 @@ export function StateInfoCard({state, onNextState}:StateInfoCardProps){
                     className={styles.nextButton}
                     onClick={onNextState}
                 >
-                    Próximo Estado
+                    Próximo estado →
                 </button>
             </div>
 

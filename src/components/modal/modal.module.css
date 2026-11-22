@@ -51,12 +51,21 @@
     align-items: center;
     justify-content: center;
     color: var(--text-soft);
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
     cursor: pointer;
 }
 
 .closeButton:hover {
     background: var(--glass-control-hover-bg);
+}
+
+.closeButton:focus-visible,
+.cancelButton:focus-visible,
+.submitButton:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
 }
 
 .form {
@@ -129,6 +138,11 @@
     font-weight: 500;
     color: var(--text-soft);
     cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.cancelButton:hover {
+    background: var(--glass-control-hover-bg);
 }
 
 .submitButton {
@@ -141,4 +155,9 @@
     font-weight: 600;
     color: var(--text-on-light);
     cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.submitButton:hover {
+    opacity: 0.92;
 }
