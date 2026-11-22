@@ -1,0 +1,257 @@
+.card {
+  width: 100%;
+  max-width: 500px;
+  padding: 26px 32px 28px;
+  border-radius: 26px;
+  border: 1.2px solid var(--glass-card-border);
+  background-image: var(--glass-timer-bg);
+  backdrop-filter: var(--liquid-glass-backdrop);
+  -webkit-backdrop-filter: var(--liquid-glass-backdrop);
+  box-shadow: var(--glass-shadow), var(--liquid-glass-rim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+}
+
+@supports (backdrop-filter: url('#liquid-glass-refraction')) {
+  .card {
+    backdrop-filter: var(--liquid-glass-backdrop-refract);
+  }
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.statusBadge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-accent-green);
+}
+
+.statusBadgeIdle {
+  color: var(--text-secondary);
+}
+
+.dot {
+  font-size: 12px;
+  color: #b4c3d2;
+}
+
+.statusNote {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(220, 230, 240, 0.85);
+}
+
+.phaseTabs {
+  background: var(--glass-pill-bg);
+  padding: 4px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.phaseTab {
+  background: var(--glass-control-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 6px 16px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.phaseTab:hover:not(.phaseTabActive) {
+  background: var(--glass-control-hover-bg);
+}
+
+.phaseTabActive {
+  background: var(--glass-control-active-bg);
+  border-color: transparent;
+  color: var(--text-on-light);
+  font-weight: 600;
+}
+
+.phaseTab:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.phaseLabelMobile {
+  display: none;
+}
+
+.clockBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.clock {
+  font-size: 96px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.cycleText {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(225, 235, 245, 0.9);
+  margin: 0;
+}
+
+.primaryActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.primaryButton {
+  background: var(--glass-control-active-bg);
+  border: none;
+  border-radius: 18px;
+  padding: 11px 36px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-on-light);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+}
+
+.primaryButton:hover {
+  opacity: 0.92;
+}
+
+.primaryButton:active {
+  transform: scale(0.98);
+}
+
+.secondaryButton {
+  background: var(--glass-control-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 11px 20px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.secondaryButton:hover {
+  background: var(--glass-control-hover-bg);
+}
+
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.linkButton:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.secondaryLinks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  font-size: 12px;
+}
+
+.linkButton {
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(230, 238, 245, 0.85);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.linkButton:hover {
+  color: var(--text-primary);
+}
+
+.dangerLink {
+  color: var(--text-danger-soft);
+}
+
+.dangerLink:hover {
+  color: #fecaca;
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 24px 20px;
+    border-radius: 24px;
+    gap: 16px;
+  }
+
+  .statusRow {
+    display: none;
+  }
+
+  .phaseTab {
+    padding: 5px 13px;
+    font-size: 11px;
+  }
+
+  .phaseLabelDesktop {
+    display: none;
+  }
+
+  .phaseLabelMobile {
+    display: inline;
+  }
+
+  .clock {
+    font-size: 72px;
+  }
+
+  .cycleText {
+    font-size: 12px;
+  }
+
+  .primaryButton {
+    padding: 10px 28px;
+    font-size: 13px;
+  }
+
+  .secondaryButton {
+    padding: 10px 17px;
+    font-size: 12px;
+  }
+
+  .secondaryLinks {
+    gap: 14px;
+    font-size: 11px;
+  }
+
+  .linkButton {
+    font-size: 11px;
+  }
+}

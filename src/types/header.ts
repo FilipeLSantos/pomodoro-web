@@ -1,12 +1,12 @@
 export interface PresetOption {
-    id: string;
-    label: string;
-    focusMinutes: number;
-    shortBreakMinutes: number;
-    longBreakMinutes: number;
+  id: string;
+  label: string;
+  focusMinutes: number;
+  shortBreakMinutes: number;
+  longBreakMinutes: number;
 }
 
 export interface BrazilianStateOption {
-    code: string;
-    name: string;
+  code: string;
+  name: string;
 }
