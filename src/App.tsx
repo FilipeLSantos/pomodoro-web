@@ -1,7 +1,7 @@
-import TasksPanel from "./components/TasksPanel/TasksPanel";
+import { PomodoroPage } from "./pages/pomodoro-page";
 
 function App() {
-  return <TasksPanel />;
+  return <PomodoroPage/>;
 }
 
 export default App;

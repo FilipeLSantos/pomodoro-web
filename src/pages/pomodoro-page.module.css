@@ -1,0 +1,63 @@
+.workspace {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 32px 40px 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 36px;
+}
+
+.topStage {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 500px) 1fr;
+    align-items: start;
+    gap: 24px;
+}
+
+.timerSlot {
+    grid-column: 2;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.infoSlot {
+    grid-column: 3;
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.tasksSlot {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+@media (max-width: 1080px) {
+    .topStage {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 20px;
+    }
+
+    .timerSlot,
+    .infoSlot {
+        grid-column: 1;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .workspace {
+        padding: 12px 20px 32px;
+        gap: 16px;
+    }
+
+    .topStage {
+        gap: 16px;
+    }
+}
