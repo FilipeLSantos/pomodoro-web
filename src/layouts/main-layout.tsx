@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { Header } from '../components/header';
 import type { HeaderProps } from '../components/header';
+import { LiquidGlassFilters } from '../components/LiquidGlassFilters/LiquidGlassFilters';
 import styles from './main-layout.module.css';
 
 const stateBackgroundModules = import.meta.glob<string>(
@@ -31,15 +33,73 @@ export function MainLayout({
     headerProps,
     stateCode,
 }: MainLayoutProps) {
-    const backgroundUrl = getStateBackgroundUrl(stateCode);
-    const shellStyle = backgroundUrl
-        ? {
-              backgroundImage: `linear-gradient(180deg, rgba(10, 14, 22, 0.34) 0%, rgba(10, 14, 22, 0.42) 100%), url(${backgroundUrl})`,
-          }
-        : undefined;
+    const [{ activeUrl, previousUrl }, setBgState] = useState<{
+        activeUrl: string | undefined;
+        previousUrl: string | undefined;
+    }>(() => ({
+        activeUrl: getStateBackgroundUrl(stateCode),
+        previousUrl: undefined,
+    }));
+
+    useEffect(() => {
+        const nextUrl = getStateBackgroundUrl(stateCode);
+        if (!nextUrl || nextUrl === activeUrl) {
+            return;
+        }
+
+        let cancelled = false;
+        const loader = new Image();
+        loader.src = nextUrl;
+
+        const commit = () => {
+            if (cancelled) return;
+            setBgState((prev) =>
+                prev.activeUrl === nextUrl
+                    ? prev
+                    : { activeUrl: nextUrl, previousUrl: prev.activeUrl }
+            );
+        };
+
+        if (typeof loader.decode === 'function') {
+            loader.decode().then(commit, commit);
+        } else if (loader.complete) {
+            commit();
+        } else {
+            loader.onload = commit;
+            loader.onerror = commit;
+        }
+
+        return () => {
+            cancelled = true;
+        };
+    }, [stateCode, activeUrl]);
 
     return (
-        <div className={styles.shell} style={shellStyle}>
+        <div className={styles.shell}>
+            <div className={styles.backdrop} aria-hidden="true">
+                {previousUrl && (
+                    <div
+                        className={styles.backdropLayer}
+                        style={{ backgroundImage: `url("${previousUrl}")` }}
+                    />
+                )}
+                {activeUrl && (
+                    <div
+                        key={activeUrl}
+                        className={`${styles.backdropLayer} ${styles.backdropLayerActive}`}
+                        style={{ backgroundImage: `url("${activeUrl}")` }}
+                        onAnimationEnd={() =>
+                            setBgState((prev) =>
+                                prev.previousUrl === undefined
+                                    ? prev
+                                    : { ...prev, previousUrl: undefined }
+                            )
+                        }
+                    />
+                )}
+                <div className={styles.backdropScrim} />
+            </div>
+            <LiquidGlassFilters/>
             <Header {...headerProps} />
             <main className={styles.main}>{children}</main>
         </div>
