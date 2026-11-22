@@ -9,9 +9,32 @@ import {
     BRAZILIAN_STATES_INFO,
     sortTasks,
 } from '../constants/pomodoro-data';
+import {
+    DEFAULT_CYCLES_BEFORE_LONG_BREAK,
+    createActiveSession,
+    getPhaseDurationSeconds,
+    getRemainingSeconds,
+    pauseSession,
+    reconcileSessionWithNow,
+    resetSessionCycles,
+    resumeSession,
+    setSessionPhase,
+    skipSessionPhase,
+} from '../domain';
 import { MainLayout } from '../layouts';
+import {
+    loadActiveSession,
+    loadPreferences,
+    loadPresets,
+    loadTasks,
+    saveActiveSession,
+    savePreferences,
+    savePresets,
+    saveTasks,
+} from '../storage';
 import type { PresetOption } from '../types/header';
 import type {
+    ActiveSession,
     StudyTask,
     TaskPriority,
     TaskStatus,
@@ -19,8 +42,7 @@ import type {
 } from '../types/pomodoro';
 import styles from './pomodoro-page.module.css';
 
-const CYCLES_BEFORE_LONG_BREAK = 4;
-const TASKS_STORAGE_KEY = 'pomodoro.tarefas';
+const DEFAULT_STATE_CODE = 'RJ';
 
 const STATUS_SEQUENCE: TaskStatus[] = [
     'A fazer',
@@ -29,53 +51,111 @@ const STATUS_SEQUENCE: TaskStatus[] = [
     'Backlog',
 ];
 
-function loadSavedTasks(): StudyTask[] {
-    try {
-        const raw = localStorage.getItem(TASKS_STORAGE_KEY);
-        if (!raw) {
-            return [];
-        }
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? sortTasks(parsed as StudyTask[]) : [];
-    } catch {
-        return [];
+function createId(prefix: string): string {
+    if (
+        typeof crypto !== 'undefined' &&
+        typeof crypto.randomUUID === 'function'
+    ) {
+        return `${prefix}-${crypto.randomUUID()}`;
     }
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function getPhaseDurationSeconds(
-    preset: PresetOption,
-    phase: TimerPhase
-): number {
-    switch (phase) {
-        case 'focus':
-            return preset.focusMinutes * 60;
-        case 'shortBreak':
-            return preset.shortBreakMinutes * 60;
-        case 'longBreak':
-            return preset.longBreakMinutes * 60;
+function stepStateCode(currentCode: string, steps: number): string {
+    if (BRAZILIAN_STATES_INFO.length === 0) {
+        return currentCode;
     }
+    const idx = BRAZILIAN_STATES_INFO.findIndex((s) => s.code === currentCode);
+    const baseIdx = idx >= 0 ? idx : 0;
+    const nextIdx = (baseIdx + steps) % BRAZILIAN_STATES_INFO.length;
+    return BRAZILIAN_STATES_INFO[nextIdx].code;
+}
+
+function isValidMinutes(value: number, min: number, max: number): boolean {
+    return Number.isInteger(value) && value >= min && value <= max;
+}
+
+interface InitialPomodoroState {
+    presets: PresetOption[];
+    selectedPresetId: string;
+    selectedStateCode: string;
+    cycleSwitchEnabled: boolean;
+    activeSession: ActiveSession | null;
+    tasks: StudyTask[];
+}
+
+function loadInitialPomodoroState(): InitialPomodoroState {
+    const loadedPresets = loadPresets(DEFAULT_PRESETS).data;
+    const loadedPrefs = loadPreferences({
+        selectedPresetId: loadedPresets[0].id,
+        selectedStateCode: DEFAULT_STATE_CODE,
+        cycleSwitchEnabled: true,
+    }).data;
+
+    const validPresetId = loadedPresets.some(
+        (p) => p.id === loadedPrefs.selectedPresetId
+    )
+        ? loadedPrefs.selectedPresetId
+        : loadedPresets[0].id;
+
+    let validStateCode = BRAZILIAN_STATES_INFO.some(
+        (s) => s.code === loadedPrefs.selectedStateCode
+    )
+        ? loadedPrefs.selectedStateCode
+        : DEFAULT_STATE_CODE;
+
+    const loadedSession = loadActiveSession().data;
+    let activeSession: ActiveSession | null = null;
+
+    if (loadedSession) {
+        const reconciled = reconcileSessionWithNow(loadedSession, Date.now());
+        if (
+            reconciled.completedFocusPhases > 0 &&
+            loadedPrefs.cycleSwitchEnabled
+        ) {
+            validStateCode = stepStateCode(
+                validStateCode,
+                reconciled.completedFocusPhases
+            );
+        }
+        activeSession =
+            reconciled.session.status === 'completed'
+                ? null
+                : reconciled.session;
+    }
+
+    const loadedTasks = sortTasks(loadTasks([]).data);
+
+    return {
+        presets: loadedPresets,
+        selectedPresetId: validPresetId,
+        selectedStateCode: validStateCode,
+        cycleSwitchEnabled: loadedPrefs.cycleSwitchEnabled,
+        activeSession,
+        tasks: loadedTasks,
+    };
 }
 
 export function PomodoroPage() {
-    const [presets, setPresets] = useState<PresetOption[]>(DEFAULT_PRESETS);
+    const [initialState] = useState<InitialPomodoroState>(
+        loadInitialPomodoroState
+    );
+
+    const [presets, setPresets] = useState<PresetOption[]>(initialState.presets);
     const [selectedPresetId, setSelectedPresetId] = useState<string>(
-        DEFAULT_PRESETS[0].id
+        initialState.selectedPresetId
     );
-    const [phase, setPhase] = useState<TimerPhase>('focus');
-    const [cycle, setCycle] = useState<number>(1);
-    const [isRunning, setIsRunning] = useState<boolean>(false);
-
-    const activePreset = useMemo(
-        () => presets.find((p) => p.id === selectedPresetId) ?? presets[0],
-        [presets, selectedPresetId]
+    const [cycleSwitchEnabled, setCycleSwitchEnabled] = useState<boolean>(
+        initialState.cycleSwitchEnabled
     );
-
-    const [secondsLeft, setSecondsLeft] = useState<number>(() =>
-        getPhaseDurationSeconds(DEFAULT_PRESETS[0], 'focus')
+    const [selectedStateCode, setSelectedStateCode] = useState<string>(
+        initialState.selectedStateCode
     );
-
-    const [cycleSwitchEnabled, setCycleSwitchEnabled] = useState<boolean>(true);
-    const [selectedStateCode, setSelectedStateCode] = useState<string>('RJ');
+    const [activeSession, setActiveSession] = useState<ActiveSession | null>(
+        initialState.activeSession
+    );
+    const [idlePhase, setIdlePhase] = useState<TimerPhase>('focus');
+    const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
     const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
     const [newPresetName, setNewPresetName] = useState('');
@@ -83,20 +163,62 @@ export function PomodoroPage() {
     const [newShortBreakMin, setNewShortBreakMin] = useState(5);
     const [newLongBreakMin, setNewLongBreakMin] = useState(15);
 
-    const [tasks, setTasks] = useState<StudyTask[]>(loadSavedTasks);
+    const [tasks, setTasks] = useState<StudyTask[]>(initialState.tasks);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
     const [taskTitle, setTaskTitle] = useState('');
     const [taskPriority, setTaskPriority] = useState<TaskPriority>('Alta');
     const [taskStatus, setTaskStatus] = useState<TaskStatus>('A fazer');
 
-    useEffect(() => {
-        try {
-            localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
-        } catch {
-            // Ignore storage quota errors
+    const activePreset = useMemo(
+        () => presets.find((p) => p.id === selectedPresetId) ?? presets[0],
+        [presets, selectedPresetId]
+    );
+
+    const timerPreset = useMemo<PresetOption>(() => {
+        if (!activeSession) {
+            return activePreset;
         }
+        return {
+            ...activePreset,
+            label: activeSession.snapshotPreset.name,
+            focusMinutes: activeSession.snapshotPreset.focusMinutes,
+            shortBreakMinutes: activeSession.snapshotPreset.shortBreakMinutes,
+            cyclesBeforeLongBreak:
+                activeSession.snapshotPreset.cyclesBeforeLongBreak,
+            longBreakMinutes: activeSession.snapshotPreset.longBreakMinutes,
+        };
+    }, [activePreset, activeSession]);
+
+    const phase: TimerPhase = activeSession ? activeSession.phase : idlePhase;
+    const cycle: number = activeSession ? activeSession.cycle : 1;
+    const isRunning: boolean = activeSession?.status === 'running';
+    const totalCyclesBeforeLongBreak: number =
+        timerPreset.cyclesBeforeLongBreak ?? DEFAULT_CYCLES_BEFORE_LONG_BREAK;
+
+    const secondsLeft: number = activeSession
+        ? getRemainingSeconds(activeSession, nowMs)
+        : getPhaseDurationSeconds(activePreset, idlePhase);
+
+    useEffect(() => {
+        savePresets(presets);
+    }, [presets]);
+
+    useEffect(() => {
+        saveTasks(tasks);
     }, [tasks]);
+
+    useEffect(() => {
+        saveActiveSession(activeSession);
+    }, [activeSession]);
+
+    useEffect(() => {
+        savePreferences({
+            selectedPresetId,
+            selectedStateCode,
+            cycleSwitchEnabled,
+        });
+    }, [selectedPresetId, selectedStateCode, cycleSwitchEnabled]);
 
     const activeStateInfo = useMemo(
         () =>
@@ -105,56 +227,93 @@ export function PomodoroPage() {
         [selectedStateCode]
     );
 
-    const handleNextState = useCallback(() => {
-        setSelectedStateCode((currentCode) => {
-            const idx = BRAZILIAN_STATES_INFO.findIndex(
-                (s) => s.code === currentCode
-            );
-            const nextIdx = (idx + 1) % BRAZILIAN_STATES_INFO.length;
-            return BRAZILIAN_STATES_INFO[nextIdx].code;
-        });
+    const advanceStateBy = useCallback((steps = 1) => {
+        setSelectedStateCode((currentCode) => stepStateCode(currentCode, steps));
     }, []);
 
-    const advancePhase = useCallback(() => {
-        setIsRunning(false);
-        if (phase === 'focus') {
-            if (cycleSwitchEnabled) {
-                handleNextState();
-            }
-            if (cycle >= CYCLES_BEFORE_LONG_BREAK) {
-                setPhase('longBreak');
-                setSecondsLeft(getPhaseDurationSeconds(activePreset, 'longBreak'));
-            } else {
-                setPhase('shortBreak');
-                setSecondsLeft(getPhaseDurationSeconds(activePreset, 'shortBreak'));
-            }
-        } else {
-            const nextCycle =
-                phase === 'longBreak' ? 1 : Math.min(cycle + 1, CYCLES_BEFORE_LONG_BREAK);
-            setCycle(nextCycle);
-            setPhase('focus');
-            setSecondsLeft(getPhaseDurationSeconds(activePreset, 'focus'));
-        }
-    }, [activePreset, cycle, cycleSwitchEnabled, handleNextState, phase]);
+    const handleNextState = useCallback(() => {
+        advanceStateBy(1);
+    }, [advanceStateBy]);
 
     useEffect(() => {
-        if (!isRunning) {
+        if (!activeSession || activeSession.status !== 'running') {
             return;
         }
 
-        const timerId = window.setInterval(() => {
-            setSecondsLeft((prev) => {
-                if (prev <= 1) {
-                    window.clearInterval(timerId);
-                    advancePhase();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+        const tick = () => {
+            const now = Date.now();
+            setNowMs(now);
 
-        return () => window.clearInterval(timerId);
-    }, [isRunning, advancePhase]);
+            if (now >= activeSession.phaseEndsAt) {
+                const result = reconcileSessionWithNow(activeSession, now);
+                if (result.completedFocusPhases > 0 && cycleSwitchEnabled) {
+                    advanceStateBy(result.completedFocusPhases);
+                }
+                if (result.session.status === 'completed') {
+                    setActiveSession(null);
+                    setIdlePhase('focus');
+                } else {
+                    setActiveSession(result.session);
+                }
+            }
+        };
+
+        tick();
+        const intervalId = window.setInterval(tick, 250);
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                tick();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('focus', tick);
+
+        return () => {
+            window.clearInterval(intervalId);
+            document.removeEventListener(
+                'visibilitychange',
+                handleVisibilityChange
+            );
+            window.removeEventListener('focus', tick);
+        };
+    }, [activeSession, cycleSwitchEnabled, advanceStateBy]);
+
+    const handleToggleRun = () => {
+        const now = Date.now();
+        setNowMs(now);
+
+        if (!activeSession) {
+            setActiveSession(
+                createActiveSession(activePreset, idlePhase, 1, now)
+            );
+            return;
+        }
+
+        if (activeSession.status === 'running') {
+            setActiveSession(pauseSession(activeSession, now));
+        } else if (activeSession.status === 'paused') {
+            setActiveSession(resumeSession(activeSession, now));
+        }
+    };
+
+    const handleSkipPhase = () => {
+        const now = Date.now();
+        setNowMs(now);
+
+        if (!activeSession) {
+            setIdlePhase((prev) => (prev === 'focus' ? 'shortBreak' : 'focus'));
+            return;
+        }
+
+        const nextSession = skipSessionPhase(activeSession, now);
+        if (!nextSession) {
+            setActiveSession(null);
+            setIdlePhase('focus');
+        } else {
+            setActiveSession(nextSession);
+        }
+    };
 
     const handlePresetChange = (presetId: string) => {
         if (isRunning) {
@@ -165,30 +324,42 @@ export function PomodoroPage() {
             return;
         }
         setSelectedPresetId(presetId);
-        setSecondsLeft(getPhaseDurationSeconds(nextPreset, phase));
+        if (activeSession) {
+            setActiveSession(null);
+        }
     };
 
     const handlePhaseChange = (nextPhase: TimerPhase) => {
-        setIsRunning(false);
-        setPhase(nextPhase);
-        setSecondsLeft(getPhaseDurationSeconds(activePreset, nextPhase));
+        const now = Date.now();
+        setNowMs(now);
+
+        if (activeSession) {
+            setActiveSession(setSessionPhase(activeSession, nextPhase, now));
+        } else {
+            setIdlePhase(nextPhase);
+        }
     };
 
     const handleResetCycles = () => {
-        setIsRunning(false);
-        setCycle(1);
-        setPhase('focus');
-        setSecondsLeft(getPhaseDurationSeconds(activePreset, 'focus'));
+        const now = Date.now();
+        setNowMs(now);
+
+        if (activeSession) {
+            setActiveSession(resetSessionCycles(activeSession, now));
+        } else {
+            setIdlePhase('focus');
+        }
     };
 
     const handleEndSession = () => {
-        setIsRunning(false);
-        setCycle(1);
-        setPhase('focus');
-        setSecondsLeft(getPhaseDurationSeconds(activePreset, 'focus'));
+        setActiveSession(null);
+        setIdlePhase('focus');
     };
 
     const openNewPresetModal = () => {
+        if (isRunning) {
+            return;
+        }
         setNewPresetName('');
         setNewFocusMin(25);
         setNewShortBreakMin(5);
@@ -198,21 +369,34 @@ export function PomodoroPage() {
 
     const handleCreatePreset = (event: React.FormEvent) => {
         event.preventDefault();
-        const trimmed = newPresetName.trim();
-        if (!trimmed) {
+        if (isRunning) {
             return;
         }
+        const trimmed = newPresetName.trim();
+        if (
+            !trimmed ||
+            !isValidMinutes(newFocusMin, 1, 120) ||
+            !isValidMinutes(newShortBreakMin, 1, 60) ||
+            !isValidMinutes(newLongBreakMin, 1, 90)
+        ) {
+            return;
+        }
+        const now = Date.now();
         const created: PresetOption = {
-            id: `custom-${Date.now()}`,
+            id: createId('custom'),
+            name: trimmed,
             label: `${trimmed} (${newFocusMin}/${newShortBreakMin}/${newLongBreakMin})`,
             focusMinutes: newFocusMin,
             shortBreakMinutes: newShortBreakMin,
+            cyclesBeforeLongBreak: DEFAULT_CYCLES_BEFORE_LONG_BREAK,
             longBreakMinutes: newLongBreakMin,
+            createdAt: now,
+            updatedAt: now,
         };
         setPresets((prev) => [...prev, created]);
         setSelectedPresetId(created.id);
-        if (!isRunning) {
-            setSecondsLeft(getPhaseDurationSeconds(created, phase));
+        if (activeSession) {
+            setActiveSession(null);
         }
         setIsPresetModalOpen(false);
     };
@@ -239,6 +423,7 @@ export function PomodoroPage() {
         if (!trimmed) {
             return;
         }
+        const now = Date.now();
         if (editingTaskId) {
             setTasks((prev) =>
                 sortTasks(
@@ -249,6 +434,7 @@ export function PomodoroPage() {
                                 title: trimmed,
                                 priority: taskPriority,
                                 status: taskStatus,
+                                updatedAt: now,
                             }
                             : item
                     )
@@ -256,10 +442,12 @@ export function PomodoroPage() {
             );
         } else {
             const created: StudyTask = {
-                id: `task-${Date.now()}`,
+                id: createId('task'),
                 title: trimmed,
                 priority: taskPriority,
                 status: taskStatus,
+                createdAt: now,
+                updatedAt: now,
             };
             setTasks((prev) => sortTasks([...prev, created]));
         }
@@ -271,6 +459,7 @@ export function PomodoroPage() {
     };
 
     const handleCycleTaskStatus = (taskId: string) => {
+        const now = Date.now();
         setTasks((prev) =>
             sortTasks(
                 prev.map((item) => {
@@ -280,7 +469,7 @@ export function PomodoroPage() {
                     const currentIdx = STATUS_SEQUENCE.indexOf(item.status);
                     const nextStatus =
                         STATUS_SEQUENCE[(currentIdx + 1) % STATUS_SEQUENCE.length];
-                    return { ...item, status: nextStatus };
+                    return { ...item, status: nextStatus, updatedAt: now };
                 })
             )
         );
@@ -290,10 +479,13 @@ export function PomodoroPage() {
         <MainLayout
             stateCode={selectedStateCode}
             headerProps={{
+                onBrandClick: () =>
+                    window.scrollTo({ top: 0, behavior: 'smooth' }),
                 presets,
                 selectedPresetId: activePreset.id,
                 onPresetChange: handlePresetChange,
                 onNewPresetClick: openNewPresetModal,
+                isPresetLocked: isRunning,
                 cycleSwitchEnabled,
                 onCycleSwitchToggle: () => setCycleSwitchEnabled((prev) => !prev),
                 states: BRAZILIAN_STATES_INFO,
@@ -307,20 +499,21 @@ export function PomodoroPage() {
                     selectedPresetId={activePreset.id}
                     onPresetChange={handlePresetChange}
                     onNewPresetClick={openNewPresetModal}
+                    isPresetLocked={isRunning}
                 />
 
                 <div className={styles.topStage}>
                     <div className={styles.timerSlot}>
                         <TimerCard
-                            preset={activePreset}
+                            preset={timerPreset}
                             phase={phase}
                             secondsLeft={secondsLeft}
                             isRunning={isRunning}
                             cycle={cycle}
-                            totalCyclesBeforeLongBreak={CYCLES_BEFORE_LONG_BREAK}
+                            totalCyclesBeforeLongBreak={totalCyclesBeforeLongBreak}
                             onPhaseChange={handlePhaseChange}
-                            onToggleRun={() => setIsRunning((prev) => !prev)}
-                            onSkipPhase={advancePhase}
+                            onToggleRun={handleToggleRun}
+                            onSkipPhase={handleSkipPhase}
                             onResetCycles={handleResetCycles}
                             onEndSession={handleEndSession}
                         />
@@ -376,9 +569,16 @@ export function PomodoroPage() {
                                 type="number"
                                 min={1}
                                 max={120}
+                                step={1}
                                 className={modalStyles.input}
-                                value={newFocusMin}
-                                onChange={(event) => setNewFocusMin(Number(event.target.value))}
+                                value={Number.isNaN(newFocusMin) ? '' : newFocusMin}
+                                onChange={(event) =>
+                                    setNewFocusMin(
+                                        event.target.value === ''
+                                            ? Number.NaN
+                                            : Number(event.target.value)
+                                    )
+                                }
                                 required
                             />
                         </div>
@@ -392,10 +592,19 @@ export function PomodoroPage() {
                                 type="number"
                                 min={1}
                                 max={60}
+                                step={1}
                                 className={modalStyles.input}
-                                value={newShortBreakMin}
+                                value={
+                                    Number.isNaN(newShortBreakMin)
+                                        ? ''
+                                        : newShortBreakMin
+                                }
                                 onChange={(event) =>
-                                    setNewShortBreakMin(Number(event.target.value))
+                                    setNewShortBreakMin(
+                                        event.target.value === ''
+                                            ? Number.NaN
+                                            : Number(event.target.value)
+                                    )
                                 }
                                 required
                             />
@@ -410,10 +619,19 @@ export function PomodoroPage() {
                                 type="number"
                                 min={1}
                                 max={90}
+                                step={1}
                                 className={modalStyles.input}
-                                value={newLongBreakMin}
+                                value={
+                                    Number.isNaN(newLongBreakMin)
+                                        ? ''
+                                        : newLongBreakMin
+                                }
                                 onChange={(event) =>
-                                    setNewLongBreakMin(Number(event.target.value))
+                                    setNewLongBreakMin(
+                                        event.target.value === ''
+                                            ? Number.NaN
+                                            : Number(event.target.value)
+                                    )
                                 }
                                 required
                             />

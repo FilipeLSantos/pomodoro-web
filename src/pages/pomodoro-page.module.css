@@ -12,7 +12,7 @@
 .topStage {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr minmax(0, 500px) 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 500px) minmax(0, 1fr);
     align-items: start;
     gap: 24px;
 }

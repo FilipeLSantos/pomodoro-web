@@ -7,86 +7,6 @@ import type {
 
 export const BRAZILIAN_STATES_INFO: BrazilianStateInfo[] = [
     {
-        code: "RJ",
-        name: "Rio de Janeiro",
-        region: "Região Sudeste",
-        landmark: "Corcovado e Baía de Guanabara",
-        description:
-        "Localizado na Região Sudeste, o Rio abriga a Floresta da Tijuca — uma das maiores florestas urbanas do mundo — e 92 municípios entre praias e serras.",
-    },
-    {
-        code: "SP",
-        name: "São Paulo",
-        region: "Região Sudeste",
-        landmark: "Avenida Paulista e Parque Ibirapuera",
-        description:
-        "Principal polo financeiro e cultural do país, São Paulo reúne 645 municípios, museus icônicos e uma das maiores diversidades gastronômicas do mundo.",
-    },
-    {
-        code: "MG",
-        name: "Minas Gerais",
-        region: "Região Sudeste",
-        landmark: "Ouro Preto e Serra do Cipó",
-        description:
-        "Famosa pelas cidades históricas barrocas, montanhas e culinária acolhedora, Minas Gerais concentra algumas das maiores reservas de biodiversidade do Cerrado.",
-    },
-    {
-        code: "BA",
-        name: "Bahia",
-        region: "Região Nordeste",
-        landmark: "Pelourinho e Chapada Diamantina",
-        description:
-        "Berço da história brasileira, a Bahia combina litoral extenso, cachoeiras monumentais na Chapada Diamantina e forte herança cultural afro-brasileira.",
-    },
-    {
-        code: "PR",
-        name: "Paraná",
-        region: "Região Sul",
-        landmark: "Cataratas do Iguaçu e Jardim Botânico",
-        description:
-        "Lar de uma das Sete Maravilhas Naturais do Mundo, o Paraná destaca-se pela preservação da Mata Atlântica e pela arquitetura planejada de Curitiba.",
-    },
-    {
-        code: "RS",
-        name: "Rio Grande do Sul",
-        region: "Região Sul",
-        landmark: "Serra Gaúcha e Cânion Itaimbezinho",
-        description:
-        "Com forte influência das tradições campeiras e europeias, o estado reúne cânions impressionantes, vinhedos na serra e extensos pampas.",
-    },
-    {
-        code: "PE",
-        name: "Pernambuco",
-        region: "Região Nordeste",
-        landmark: "Recife Antigo e Fernando de Noronha",
-        description:
-        "Reconhecido pelo frevo, maracatu e pontes históricas, Pernambuco também abriga o arquipélago de Fernando de Noronha, santuário marinho mundial.",
-    },
-    {
-        code: "CE",
-        name: "Ceará",
-        region: "Região Nordeste",
-        landmark: "Jericoacoara e Praia de Canoa Quebrada",
-        description:
-        "Banhado por ventos constantes e falésias coloridas, o Ceará é referência nacional em educação, energia renovável e paisagens de dunas e lagoas.",
-    },
-    {
-        code: "AM",
-        name: "Amazonas",
-        region: "Região Norte",
-        landmark: "Encontro das Águas e Teatro Amazonas",
-        description:
-        "Coração da maior floresta tropical do planeta, o Amazonas possui rios monumentais e uma biodiversidade incomparável no mundo.",
-    },
-    {
-        code: "DF",
-        name: "Distrito Federal",
-        region: "Região Centro-Oeste",
-        landmark: "Congresso Nacional e Lago Paranoá",
-        description:
-        "Projetada por Lúcio Costa e Oscar Niemeyer, Brasília é Patrimônio Cultural da Humanidade e símbolo do modernismo brasileiro.",
-    },
-    {
         code: "AC",
         name: "Acre",
         region: "Região Norte",
@@ -109,6 +29,38 @@ export const BRAZILIAN_STATES_INFO: BrazilianStateInfo[] = [
         landmark: "Fortaleza de São José de Macapá e Marco Zero",
         description:
         "Cortado pela Linha do Equador, o Amapá possui grande parte do território preservado e abriga o encontro do rio Amazonas com o oceano Atlântico.",
+    },
+    {
+        code: "AM",
+        name: "Amazonas",
+        region: "Região Norte",
+        landmark: "Encontro das Águas e Teatro Amazonas",
+        description:
+        "Coração da maior floresta tropical do planeta, o Amazonas possui rios monumentais e uma biodiversidade incomparável no mundo.",
+    },
+    {
+        code: "BA",
+        name: "Bahia",
+        region: "Região Nordeste",
+        landmark: "Pelourinho e Chapada Diamantina",
+        description:
+        "Berço da história brasileira, a Bahia combina litoral extenso, cachoeiras monumentais na Chapada Diamantina e forte herança cultural afro-brasileira.",
+    },
+    {
+        code: "CE",
+        name: "Ceará",
+        region: "Região Nordeste",
+        landmark: "Jericoacoara e Praia de Canoa Quebrada",
+        description:
+        "Banhado por ventos constantes e falésias coloridas, o Ceará é referência nacional em educação, energia renovável e paisagens de dunas e lagoas.",
+    },
+    {
+        code: "DF",
+        name: "Distrito Federal",
+        region: "Região Centro-Oeste",
+        landmark: "Congresso Nacional e Lago Paranoá",
+        description:
+        "Projetada por Lúcio Costa e Oscar Niemeyer, Brasília é Patrimônio Cultural da Humanidade e símbolo do modernismo brasileiro.",
     },
     {
         code: "ES",
@@ -151,6 +103,14 @@ export const BRAZILIAN_STATES_INFO: BrazilianStateInfo[] = [
         "Referência internacional em ecoturismo, o Mato Grosso do Sul abriga nascentes cristalinas, grutas submersas e a maior planície alagável do planeta.",
     },
     {
+        code: "MG",
+        name: "Minas Gerais",
+        region: "Região Sudeste",
+        landmark: "Ouro Preto e Serra do Cipó",
+        description:
+        "Famosa pelas cidades históricas barrocas, montanhas e culinária acolhedora, Minas Gerais concentra algumas das maiores reservas de biodiversidade do Cerrado.",
+    },
+    {
         code: "PA",
         name: "Pará",
         region: "Região Norte",
@@ -167,6 +127,22 @@ export const BRAZILIAN_STATES_INFO: BrazilianStateInfo[] = [
         "Onde o sol nasce primeiro nas Américas, a Paraíba mistura falésias coloridas, piscinas naturais e o maior São João do mundo em Campina Grande.",
     },
     {
+        code: "PR",
+        name: "Paraná",
+        region: "Região Sul",
+        landmark: "Cataratas do Iguaçu e Jardim Botânico",
+        description:
+        "Lar de uma das Sete Maravilhas Naturais do Mundo, o Paraná destaca-se pela preservação da Mata Atlântica e pela arquitetura planejada de Curitiba.",
+    },
+    {
+        code: "PE",
+        name: "Pernambuco",
+        region: "Região Nordeste",
+        landmark: "Recife Antigo e Fernando de Noronha",
+        description:
+        "Reconhecido pelo frevo, maracatu e pontes históricas, Pernambuco também abriga o arquipélago de Fernando de Noronha, santuário marinho mundial.",
+    },
+    {
         code: "PI",
         name: "Piauí",
         region: "Região Nordeste",
@@ -175,12 +151,28 @@ export const BRAZILIAN_STATES_INFO: BrazilianStateInfo[] = [
         "Dono de um dos sítios arqueológicos mais antigos das Américas, o Piauí une cânions, pinturas rupestres milenares e o único delta em mar aberto das Américas.",
     },
     {
+        code: "RJ",
+        name: "Rio de Janeiro",
+        region: "Região Sudeste",
+        landmark: "Corcovado e Baía de Guanabara",
+        description:
+        "Localizado na Região Sudeste, o Rio abriga a Floresta da Tijuca — uma das maiores florestas urbanas do mundo — e 92 municípios entre praias e serras.",
+    },
+    {
         code: "RN",
         name: "Rio Grande do Norte",
         region: "Região Nordeste",
         landmark: "Morro do Careca e Parrachos de Maracajaú",
         description:
         "Conhecido como a esquina do continente, o Rio Grande do Norte destaca-se pelas dunas móveis, falésias, ventos constantes e forte produção de energia eólica.",
+    },
+    {
+        code: "RS",
+        name: "Rio Grande do Sul",
+        region: "Região Sul",
+        landmark: "Serra Gaúcha e Cânion Itaimbezinho",
+        description:
+        "Com forte influência das tradições campeiras e europeias, o estado reúne cânions impressionantes, vinhedos na serra e extensos pampas.",
     },
     {
         code: "RO",
@@ -205,6 +197,14 @@ export const BRAZILIAN_STATES_INFO: BrazilianStateInfo[] = [
         landmark: "Serra do Rio do Rastro e Ilha de Santa Catarina",
         description:
         "Com forte contraste entre praias recortadas e serras que registram geada e neve no inverno, Santa Catarina une tradição europeia e belezas naturais.",
+    },
+    {
+        code: "SP",
+        name: "São Paulo",
+        region: "Região Sudeste",
+        landmark: "Avenida Paulista e Parque Ibirapuera",
+        description:
+        "Principal polo financeiro e cultural do país, São Paulo reúne 645 municípios, museus icônicos e uma das maiores diversidades gastronômicas do mundo.",
     },
     {
         code: "SE",
