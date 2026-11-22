@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import {DEFAULT_BRAZILIAN_STATES, DEFAULT_PRESETS } from '../../constants/header-defaults';
 import type { BrazilianStateOption, PresetOption } from '../../types/header';
+import { StateDropdown } from './StateDropdown';
 import styles from './header.module.css';
 
 export interface HeaderProps {
@@ -11,6 +12,7 @@ export interface HeaderProps {
     selectedPresetId?: string;
     onPresetChange?: (presetId: string) => void;
     onNewPresetClick?: () => void;
+    isPresetLocked?: boolean;
     showPresetSelector?: boolean;
     cycleSwitchEnabled?: boolean;
     onCycleSwitchToggle?: () => void;
@@ -23,10 +25,14 @@ export interface HeaderProps {
 }
 
 export function Header({
+    brandName = 'POMODORO BRASIL',
+    brandHref = '/',
+    onBrandClick,
     presets = DEFAULT_PRESETS,
     selectedPresetId = DEFAULT_PRESETS[0].id,
     onPresetChange,
     onNewPresetClick,
+    isPresetLocked = false,
     showPresetSelector = true,
     cycleSwitchEnabled = true,
     onCycleSwitchToggle,
@@ -39,8 +45,6 @@ export function Header({
 }: HeaderProps) {
     
     const presetSelectId = useId();
-    const stateSelectId = useId();
-    const mobileStateSelectId = useId();
 
     const headerClassName = className
     ? `${styles.header} ${className}`
@@ -48,6 +52,51 @@ export function Header({
 
     return (
         <header className={headerClassName}>
+        <a
+            href={brandHref}
+            className={styles.brand}
+            aria-label={`${brandName} - Página inicial`}
+            onClick={(event) => {
+            if (onBrandClick) {
+                event.preventDefault();
+                onBrandClick();
+            }
+            }}
+        >
+            <span className={styles.dotDesktop} aria-hidden="true" />
+            <span className={styles.dotMobile} aria-hidden="true" />
+            <span className={styles.brandTitle}>{brandName}</span>
+            <svg
+                className={styles.brandFlag}
+                viewBox="0 0 22 16"
+                fill="none"
+                aria-hidden="true"
+                focusable="false"
+            >
+                <rect
+                    x="1"
+                    y="1"
+                    width="20"
+                    height="14"
+                    rx="2"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                />
+                <polygon
+                    points="11,3.2 18.2,8 11,12.8 3.8,8"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinejoin="round"
+                />
+                <circle
+                    cx="11"
+                    cy="8"
+                    r="2.5"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                />
+            </svg>
+        </a>
 
         {showPresetSelector && (
             <div
@@ -63,6 +112,8 @@ export function Header({
                 id={presetSelectId}
                 className={styles.presetSelect}
                 value={selectedPresetId}
+                disabled={isPresetLocked}
+                aria-disabled={isPresetLocked}
                 onChange={(event) => onPresetChange?.(event.target.value)}
                 >
                 {presets.map((preset) => (
@@ -78,6 +129,7 @@ export function Header({
             <button
                 type="button"
                 className={styles.newPresetButton}
+                disabled={isPresetLocked}
                 onClick={onNewPresetClick}
             >
                 + Novo preset
@@ -103,44 +155,20 @@ export function Header({
                 >
                     Troca por ciclo
                 </button>
-                <div className={styles.stateSelectWrapper}>
-                    <select
-                    id={stateSelectId}
-                    aria-label="Selecionar estado brasileiro"
-                    className={styles.stateSelect}
-                    value={selectedStateCode}
-                    onChange={(event) => onStateChange?.(event.target.value)}
-                    >
-                    {states.map((state) => (
-                        <option key={state.code} value={state.code}>
-                        {state.name} ({state.code})
-                        </option>
-                    ))}
-                    </select>
-                    <span className={styles.stateCaret} aria-hidden="true">
-                    ▾
-                    </span>
-                </div>
+                <StateDropdown
+                    states={states}
+                    selectedStateCode={selectedStateCode}
+                    onStateChange={onStateChange}
+                    variant="desktop"
+                />
                 </div>
 
-                <div className={styles.mobileStateWrapper}>
-                <select
-                    id={mobileStateSelectId}
-                    aria-label="Selecionar estado brasileiro"
-                    className={styles.mobileStateSelect}
-                    value={selectedStateCode}
-                    onChange={(event) => onStateChange?.(event.target.value)}
-                >
-                    {states.map((state) => (
-                    <option key={state.code} value={state.code}>
-                        {state.code}
-                    </option>
-                    ))}
-                </select>
-                <span className={styles.mobileStateCaret} aria-hidden="true">
-                    ▾
-                </span>
-                </div>
+                <StateDropdown
+                    states={states}
+                    selectedStateCode={selectedStateCode}
+                    onStateChange={onStateChange}
+                    variant="mobile"
+                />
             </>
             )}
         </div>
