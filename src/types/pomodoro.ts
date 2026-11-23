@@ -1,7 +1,12 @@
-export type TimerPhase = 'focus' | 'shortBreak' | 'longBreak';
-export type SessionStatus = 'running' | 'paused' | 'completed';
-export type TaskPriority = 'Alta' | 'Média' | 'Baixa';
-export type TaskStatus = 'Em execução' | 'A fazer' | 'Backlog' | 'Concluída';
+export type TimerPhase = "focus" | "shortBreak" | "longBreak";
+export type SessionStatus = "running" | "paused" | "completed";
+export type TaskPriority = "Alta" | "Média" | "Baixa";
+export type TaskStatus =
+  | "Em execução"
+  | "A fazer"
+  | "Backlog"
+  | "Concluída"
+  | "Cancelada";
 
 export interface StudyTask {
   id: string;

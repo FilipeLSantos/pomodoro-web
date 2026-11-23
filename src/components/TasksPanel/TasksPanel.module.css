@@ -151,6 +151,12 @@
   border-color: rgba(100, 116, 139, 0.35);
 }
 
+.statusCancelled {
+  color: #fecaca;
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
 .taskButton {
   padding: 2px 4px;
   border: none;

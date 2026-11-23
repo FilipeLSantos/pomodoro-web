@@ -1,12 +1,14 @@
-import { useId } from 'react';
-import type { PresetOption } from '../../types/header';
-import styles from './MobilePresetBar.module.css';
+import { useId } from "react";
+import type { PresetOption } from "../../types/header";
+import styles from "./MobilePresetBar.module.css";
 
 export interface MobilePresetBarProps {
   presets: PresetOption[];
   selectedPresetId: string;
   onPresetChange: (presetId: string) => void;
   onNewPresetClick: () => void;
+  onEditPresetClick: () => void;
+  onDeletePresetClick: () => void;
   isPresetLocked?: boolean;
 }
 
@@ -15,12 +17,18 @@ export function MobilePresetBar({
   selectedPresetId,
   onPresetChange,
   onNewPresetClick,
+  onEditPresetClick,
+  onDeletePresetClick,
   isPresetLocked = false,
 }: MobilePresetBarProps) {
   const selectId = useId();
 
   return (
-    <div className={styles.bar} role="region" aria-label="Seletor de Presets Mobile">
+    <div
+      className={styles.bar}
+      role="region"
+      aria-label="Seletor de Presets Mobile"
+    >
       <div className={styles.selectGroup}>
         <label htmlFor={selectId} className={styles.label}>
           Preset:
@@ -30,8 +38,6 @@ export function MobilePresetBar({
             id={selectId}
             className={styles.select}
             value={selectedPresetId}
-            disabled={isPresetLocked}
-            aria-disabled={isPresetLocked}
             onChange={(event) => onPresetChange(event.target.value)}
           >
             {presets.map((preset) => (
@@ -49,10 +55,27 @@ export function MobilePresetBar({
       <button
         type="button"
         className={styles.newButton}
-        disabled={isPresetLocked}
         onClick={onNewPresetClick}
       >
         + Novo
+      </button>
+      <button
+        type="button"
+        className={styles.newButton}
+        onClick={onEditPresetClick}
+        disabled={isPresetLocked || presets.length === 0}
+        aria-label="Editar preset"
+      >
+        Editar
+      </button>
+      <button
+        type="button"
+        className={styles.newButton}
+        onClick={onDeletePresetClick}
+        disabled={isPresetLocked || presets.length === 0}
+        aria-label="Excluir preset"
+      >
+        Excluir
       </button>
     </div>
   );

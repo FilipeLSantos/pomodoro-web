@@ -1,505 +1,533 @@
 .header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    width: 100%;
-    height: var(--header-height-desktop);
-    padding: 0 40px;
-    box-sizing: border-box;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
-    gap: 16px;
-    font-family: var(--font-sans);
-    background-image: var(--glass-header-bg);
-    backdrop-filter: blur(var(--glass-header-blur)) saturate(1.4);
-    -webkit-backdrop-filter: blur(var(--glass-header-blur)) saturate(1.4);
-    border-bottom: 1px solid var(--glass-border);
-    box-shadow: var(--liquid-glass-pill-rim);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  height: var(--header-height-desktop);
+  padding: 0 40px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-sans);
+  background-image: var(--glass-header-bg);
+  backdrop-filter: blur(var(--glass-header-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-header-blur)) saturate(1.4);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: var(--liquid-glass-pill-rim);
 }
 
 .brand {
-    justify-self: start;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    height: 26px;
-    background: transparent;
-    border: none;
-    padding: 0;
-    margin: 0;
-    color: var(--text-primary);
-    text-decoration: none;
-    cursor: pointer;
-    flex-shrink: 0;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 26px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: var(--text-primary);
+  text-decoration: none;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .brand:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 4px;
-    border-radius: 6px;
+  outline: 2px solid var(--text-primary);
+  outline-offset: 4px;
+  border-radius: 6px;
 }
 
 .dotDesktop {
-    display: block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 8px rgba(74, 222, 128, 0.55);
-    flex-shrink: 0;
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.55);
+  flex-shrink: 0;
 }
 
 .dotMobile {
-    display: none;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 8px rgba(74, 222, 128, 0.55);
-    flex-shrink: 0;
+  display: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.55);
+  flex-shrink: 0;
 }
 
 .brandTitle {
-    display: inline-flex;
-    align-items: center;
-    font-size: 13px;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: 1.3px;
-    color: var(--text-primary);
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 1.3px;
+  color: var(--text-primary);
+  white-space: nowrap;
 }
 
 .brandFlag {
-    display: block;
-    width: 22px;
-    height: 16px;
-    color: var(--text-primary);
-    opacity: 0.92;
-    flex-shrink: 0;
+  display: block;
+  width: 22px;
+  height: 16px;
+  color: var(--text-primary);
+  opacity: 0.92;
+  flex-shrink: 0;
 }
 
 .presetGroup {
-    grid-column: 2;
-    justify-self: center;
-    background: var(--glass-pill-bg);
-    border: 1px solid var(--glass-border-subtle);
-    border-radius: var(--radius-pill);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 5px 8px 5px 14px;
-    flex-shrink: 0;
+  grid-column: 2;
+  justify-self: center;
+  background: var(--glass-pill-bg);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px 5px 14px;
+  flex-shrink: 0;
 }
 
 .presetLabel {
-    display: inline-flex;
-    align-items: center;
-    height: 24px;
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 1;
-    color: var(--text-secondary);
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .selectWrapper {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    height: 24px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
 }
 
 .presetSelect {
-    display: block;
-    height: 24px;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background: transparent;
-    border: none;
-    padding: 0 16px 0 0;
-    margin: 0;
-    min-width: 0;
-    max-width: 100%;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 24px;
-    color: var(--text-primary);
-    cursor: pointer;
+  display: block;
+  height: 24px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  padding: 0 16px 0 0;
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
+  color: var(--text-primary);
+  cursor: pointer;
 }
 
 .presetSelect::picker-icon {
-    display: none;
+  display: none;
 }
 
 .presetSelect:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .presetSelect:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
-    border-radius: 4px;
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .presetSelect option {
-    background: #141923;
-    color: #ffffff;
+  background: #141923;
+  color: #ffffff;
 }
 
 .caret {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    line-height: 1;
-    color: var(--text-primary);
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--text-primary);
 }
 
 .newPresetButton {
-    height: 24px;
-    background: var(--glass-control-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-chip);
-    padding: 0 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-sans);
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1;
-    color: var(--text-soft);
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+  height: 24px;
+  background: var(--glass-control-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-chip);
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .newPresetButton:hover:not(:disabled) {
-    background: var(--glass-control-hover-bg);
+  background: var(--glass-control-hover-bg);
 }
 
 .newPresetButton:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .newPresetButton:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
 }
 
 .rightSection {
-    grid-column: 3;
-    justify-self: end;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .stateGroup {
-    background: var(--glass-pill-bg);
-    border: 1px solid var(--glass-border-subtle);
-    border-radius: var(--radius-pill);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 6px;
-    flex-shrink: 0;
+  background: var(--glass-pill-bg);
+  border: 1px solid var(--glass-border-subtle);
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  flex-shrink: 0;
 }
 
 .cycleButton {
-    height: 26px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: var(--radius-chip);
-    padding: 0 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-sans);
-    font-size: 11px;
-    font-weight: 500;
-    line-height: 1;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  height: 26px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-chip);
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
-.cycleButton[aria-pressed='true'] {
-    background: var(--glass-control-bg);
-    border-color: var(--glass-border);
-    color: var(--text-soft);
+.cycleButton[aria-pressed="true"] {
+  background: var(--glass-control-bg);
+  border-color: var(--glass-border);
+  color: var(--text-soft);
 }
 
 .cycleButton:hover {
-    background: var(--glass-control-hover-bg);
+  background: var(--glass-control-hover-bg);
 }
 
 .cycleButton:focus-visible {
-    outline: 2px solid var(--text-primary);
-    outline-offset: 2px;
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
 }
 
 .stateSelectWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  background: var(--glass-control-active-bg);
+  border-radius: var(--radius-chip);
+}
+
+.stateTriggerButton {
+  height: 26px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-chip);
+  padding: 0 10px 0 12px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-on-light);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.stateTriggerButton:hover {
+  opacity: 0.9;
+}
+
+.stateTriggerButton:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
+.stateTriggerText {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.dropdownChevron {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.dropdownChevronOpen {
+  transform: rotate(180deg);
+}
+
+.stateMenu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 80;
+  width: 248px;
+  max-width: calc(100vw - 32px);
+  max-height: 292px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.02) 100%
+    ),
+    rgba(12, 17, 27, 0.88);
+  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+}
+
+.stateMenu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.stateMenu::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 6px 0;
+}
+
+.stateMenu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+}
+
+.stateMenu::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.stateOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(235, 242, 250, 0.92);
+  cursor: pointer;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease;
+}
+
+.stateOptionHighlighted {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.stateOptionSelected {
+  background: rgba(134, 239, 172, 0.15);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.stateOptionName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stateOptionRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.stateOptionCode {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.stateOptionSelected .stateOptionCode {
+  background: rgba(134, 239, 172, 0.2);
+  color: var(--text-accent-green);
+}
+
+.stateOptionCheck {
+  width: 12px;
+  height: 12px;
+  color: var(--text-accent-green);
+}
+
+.mobileStateWrapper {
+  display: none;
+}
+
+@media (max-width: 1080px) {
+  .header {
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    height: var(--header-height-mobile);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .rightSection {
+    margin-left: auto;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .dotDesktop {
+    display: none;
+  }
+
+  .dotMobile {
+    display: block;
+  }
+
+  .brandTitle {
+    font-size: 12px;
+    letter-spacing: 1.2px;
+  }
+
+  .brandFlag {
+    width: 19px;
+    height: 14px;
+  }
+
+  .presetGroup,
+  .stateGroup {
+    display: none;
+  }
+
+  .mobileStateWrapper {
     position: relative;
     display: inline-flex;
     align-items: center;
     height: 26px;
-    background: var(--glass-control-active-bg);
+    background: var(--glass-control-bg);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-chip);
-}
+  }
 
-.stateTriggerButton {
-    height: 26px;
+  .mobileStateTriggerButton {
+    height: 24px;
     background: transparent;
     border: none;
     border-radius: var(--radius-chip);
-    padding: 0 10px 0 12px;
+    padding: 0 9px 0 11px;
     margin: 0;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     font-family: var(--font-sans);
     font-size: 11px;
     font-weight: 600;
     line-height: 1;
-    color: var(--text-on-light);
+    color: var(--text-soft);
     white-space: nowrap;
     cursor: pointer;
-    transition: opacity 0.15s ease;
-}
+  }
 
-.stateTriggerButton:hover {
-    opacity: 0.9;
-}
-
-.stateTriggerButton:focus-visible {
+  .mobileStateTriggerButton:focus-visible {
     outline: 2px solid var(--text-primary);
     outline-offset: 2px;
+  }
 }
 
-.stateTriggerText {
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
-}
-
-.dropdownChevron {
-    width: 12px;
-    height: 12px;
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-}
-
-.dropdownChevronOpen {
-    transform: rotate(180deg);
-}
-
-.stateMenu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    z-index: 80;
-    width: 248px;
-    max-width: calc(100vw - 32px);
-    max-height: 292px;
-    margin: 0;
-    padding: 6px;
-    list-style: none;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.26);
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%),
-        rgba(12, 17, 27, 0.88);
-    backdrop-filter: blur(22px) saturate(1.5);
-    -webkit-backdrop-filter: blur(22px) saturate(1.5);
-    box-shadow:
-        0 20px 44px rgba(0, 0, 0, 0.5),
-        inset 0 1px 1px rgba(255, 255, 255, 0.28);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
-}
-
-.stateMenu::-webkit-scrollbar {
-    width: 5px;
-}
-
-.stateMenu::-webkit-scrollbar-track {
-    background: transparent;
-    margin: 6px 0;
-}
-
-.stateMenu::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.24);
-    border-radius: 999px;
-}
-
-.stateMenu::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
-}
-
-.stateOption {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 8px 10px;
-    border-radius: 10px;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    font-weight: 500;
-    color: rgba(235, 242, 250, 0.92);
-    cursor: pointer;
-    transition: background-color 0.14s ease, color 0.14s ease;
-}
-
-.stateOptionHighlighted {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
-}
-
-.stateOptionSelected {
-    background: rgba(134, 239, 172, 0.15);
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.stateOptionName {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.stateOptionRight {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-.stateOptionCode {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-    padding: 2px 6px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-secondary);
-}
-
-.stateOptionSelected .stateOptionCode {
-    background: rgba(134, 239, 172, 0.2);
-    color: var(--text-accent-green);
-}
-
-.stateOptionCheck {
-    width: 12px;
-    height: 12px;
-    color: var(--text-accent-green);
-}
-
-.mobileStateWrapper {
-    display: none;
-}
-
-@media (max-width: 1080px) {
-    .header {
-        padding: 0 24px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-}
-
-@media (max-width: 768px) {
-    .header {
-        height: var(--header-height-mobile);
-        padding: 0 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .rightSection {
-        margin-left: auto;
-    }
-
-    .brand {
-        gap: 8px;
-    }
-
-    .dotDesktop {
-        display: none;
-    }
-
-    .dotMobile {
-        display: block;
-    }
-
-    .brandTitle {
-        font-size: 12px;
-        letter-spacing: 1.2px;
-    }
-
-    .brandFlag {
-        width: 19px;
-        height: 14px;
-    }
-
-    .presetGroup,
-    .stateGroup {
-        display: none;
-    }
-
-    .mobileStateWrapper {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        height: 26px;
-        background: var(--glass-control-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: var(--radius-chip);
-    }
-
-    .mobileStateTriggerButton {
-        height: 24px;
-        background: transparent;
-        border: none;
-        border-radius: var(--radius-chip);
-        padding: 0 9px 0 11px;
-        margin: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        font-family: var(--font-sans);
-        font-size: 11px;
-        font-weight: 600;
-        line-height: 1;
-        color: var(--text-soft);
-        white-space: nowrap;
-        cursor: pointer;
-    }
-
-    .mobileStateTriggerButton:focus-visible {
-        outline: 2px solid var(--text-primary);
-        outline-offset: 2px;
-    }
+/* Em telas intermediárias, permite que os controles de preset ocupem outra linha. */
+@media (min-width: 769px) and (max-width: 1080px) {
+  .header {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--header-height-desktop);
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .presetGroup {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 }

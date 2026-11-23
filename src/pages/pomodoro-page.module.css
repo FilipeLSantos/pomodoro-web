@@ -1,63 +1,100 @@
+/* Estrutura original: cronômetro centralizado, cenário à direita e tarefas abaixo. */
 .workspace {
-    width: 100%;
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 32px 40px 44px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 36px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 40px 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
 }
 
 .topStage {
-    width: 100%;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 500px) minmax(0, 1fr);
-    align-items: start;
-    gap: 24px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 500px) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
 }
 
 .timerSlot {
-    grid-column: 2;
-    display: flex;
-    justify-content: center;
-    width: 100%;
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
 }
 
 .infoSlot {
-    grid-column: 3;
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
+  grid-column: 3;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .tasksSlot {
-    width: 100%;
-    display: flex;
-    justify-content: center;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Avisos adicionados junto com as correções do temporizador. */
+.sessionNotice,
+.storageNotice {
+  width: 100%;
+  max-width: 500px;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(20, 31, 39, 0.85);
+  color: white;
+  border-radius: 12px;
+  font-size: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.noticeButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.fieldError {
+  color: #ffc4c4;
+  font-size: 12px;
+  margin: 3px 0;
 }
 
 @media (max-width: 1080px) {
-    .topStage {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        gap: 20px;
-    }
+  .topStage {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 20px;
+  }
 
-    .timerSlot,
-    .infoSlot {
-        grid-column: 1;
-        justify-content: center;
-    }
+  .timerSlot,
+  .infoSlot {
+    grid-column: 1;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 768px) {
-    .workspace {
-        padding: 12px 20px 32px;
-        gap: 16px;
-    }
+  .workspace {
+    padding: 12px 20px 32px;
+    gap: 16px;
+  }
 
-    .topStage {
-        gap: 16px;
-    }
+  .topStage {
+    gap: 16px;
+  }
 }

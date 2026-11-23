@@ -1,4 +1,4 @@
-import type { PresetOption } from '../types/header';
+import type { PresetOption } from "../types/header";
 import type {
   ActiveSession,
   StudyTask,
@@ -6,13 +6,13 @@ import type {
   TaskStatus,
   TimerPhase,
   UiPreferences,
-} from '../types/pomodoro';
+} from "../types/pomodoro";
 
 export const STORAGE_KEYS = {
-  presets: 'pomodoro.presets',
-  tasks: 'pomodoro.tarefas',
-  activeSession: 'pomodoro.sessaoAtiva',
-  preferences: 'pomodoro.preferencias',
+  presets: "pomodoro.presets",
+  tasks: "pomodoro.tarefas",
+  activeSession: "pomodoro.sessaoAtiva",
+  preferences: "pomodoro.preferencias",
 } as const;
 
 export interface StorageLoadResult<T> {
@@ -26,32 +26,29 @@ export interface StorageSaveResult {
   error: string | null;
 }
 
-const VALID_PHASES: ReadonlySet<TimerPhase> = new Set([
-  'focus',
-  'shortBreak',
-  'longBreak',
-]);
+const VALID_PHASES: TimerPhase[] = ["focus", "shortBreak", "longBreak"];
+const VALID_PRIORITIES: TaskPriority[] = ["Alta", "Média", "Baixa"];
+const VALID_STATUSES: TaskStatus[] = [
+  "Em execução",
+  "A fazer",
+  "Backlog",
+  "Concluída",
+  "Cancelada",
+];
 
-const VALID_PRIORITIES: ReadonlySet<TaskPriority> = new Set([
-  'Alta',
-  'Média',
-  'Baixa',
-]);
-
-const VALID_STATUSES: ReadonlySet<TaskStatus> = new Set([
-  'Em execução',
-  'A fazer',
-  'Backlog',
-  'Concluída',
-]);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+// JSON.parse pode devolver qualquer valor. Verificamos se é um objeto antes
+// de consultar suas propriedades.
+function isObject(value: unknown): value is { [key: string]: unknown } {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isPositiveInt(value: unknown, min: number, max: number): value is number {
+function isPositiveInt(
+  value: unknown,
+  min: number,
+  max: number,
+): value is number {
   return (
-    typeof value === 'number' &&
+    typeof value === "number" &&
     Number.isInteger(value) &&
     value >= min &&
     value <= max
@@ -59,92 +56,100 @@ function isPositiveInt(value: unknown, min: number, max: number): value is numbe
 }
 
 function isValidPreset(value: unknown): value is PresetOption {
-  if (!isRecord(value)) {
+  if (!isObject(value)) {
     return false;
   }
   const cycles = value.cyclesBeforeLongBreak;
-  const cyclesValid =
-    cycles === undefined || isPositiveInt(cycles, 1, 12);
+  const cyclesValid = cycles === undefined || isPositiveInt(cycles, 1, 12);
 
   return (
-    typeof value.id === 'string' &&
+    typeof value.id === "string" &&
     value.id.trim().length > 0 &&
-    typeof value.label === 'string' &&
+    typeof value.label === "string" &&
     value.label.trim().length > 0 &&
+    (value.name === undefined ||
+      (typeof value.name === "string" &&
+        value.name.trim().length > 0 &&
+        value.name.trim().length <= 40)) &&
     isPositiveInt(value.focusMinutes, 1, 120) &&
     isPositiveInt(value.shortBreakMinutes, 1, 60) &&
-    isPositiveInt(value.longBreakMinutes, 1, 90) &&
+    isPositiveInt(value.longBreakMinutes, 1, 60) &&
     cyclesValid
   );
 }
 
 function isValidTask(value: unknown): value is StudyTask {
-  if (!isRecord(value)) {
+  if (!isObject(value)) {
     return false;
   }
   return (
-    typeof value.id === 'string' &&
+    typeof value.id === "string" &&
     value.id.trim().length > 0 &&
-    typeof value.title === 'string' &&
+    typeof value.title === "string" &&
     value.title.trim().length > 0 &&
-    typeof value.priority === 'string' &&
-    VALID_PRIORITIES.has(value.priority as TaskPriority) &&
-    typeof value.status === 'string' &&
-    VALID_STATUSES.has(value.status as TaskStatus)
+    value.title.trim().length <= 100 &&
+    typeof value.priority === "string" &&
+    VALID_PRIORITIES.includes(value.priority as TaskPriority) &&
+    typeof value.status === "string" &&
+    VALID_STATUSES.includes(value.status as TaskStatus)
   );
 }
 
 function isValidActiveSession(value: unknown): value is ActiveSession {
-  if (!isRecord(value)) {
+  if (!isObject(value)) {
     return false;
   }
-  if (!isRecord(value.snapshotPreset)) {
+  if (!isObject(value.snapshotPreset)) {
     return false;
   }
 
   const snap = value.snapshotPreset;
   const validSnapshot =
-    typeof snap.name === 'string' &&
+    typeof snap.name === "string" &&
     snap.name.trim().length > 0 &&
     isPositiveInt(snap.focusMinutes, 1, 120) &&
     isPositiveInt(snap.shortBreakMinutes, 1, 60) &&
     isPositiveInt(snap.cyclesBeforeLongBreak, 1, 12) &&
-    isPositiveInt(snap.longBreakMinutes, 1, 90);
+    isPositiveInt(snap.longBreakMinutes, 1, 60);
 
   const validStatus =
-    value.status === 'running' ||
-    value.status === 'paused' ||
-    value.status === 'completed';
+    value.status === "running" ||
+    value.status === "paused" ||
+    value.status === "completed";
 
   return (
     validSnapshot &&
-    typeof value.id === 'string' &&
-    typeof value.presetId === 'string' &&
-    typeof value.phase === 'string' &&
-    VALID_PHASES.has(value.phase as TimerPhase) &&
+    typeof value.id === "string" &&
+    typeof value.presetId === "string" &&
+    typeof value.phase === "string" &&
+    VALID_PHASES.includes(value.phase as TimerPhase) &&
     isPositiveInt(value.cycle, 1, 12) &&
     validStatus &&
-    typeof value.phaseStartedAt === 'number' &&
+    typeof value.phaseStartedAt === "number" &&
     Number.isFinite(value.phaseStartedAt) &&
-    typeof value.phaseEndsAt === 'number' &&
+    typeof value.phaseEndsAt === "number" &&
     Number.isFinite(value.phaseEndsAt) &&
     (value.pausedAt === null ||
-      (typeof value.pausedAt === 'number' && Number.isFinite(value.pausedAt))) &&
+      (typeof value.pausedAt === "number" &&
+        Number.isFinite(value.pausedAt))) &&
     (value.remainingMsOnPause === null ||
-      (typeof value.remainingMsOnPause === 'number' &&
+      (typeof value.remainingMsOnPause === "number" &&
         Number.isFinite(value.remainingMsOnPause) &&
         value.remainingMsOnPause >= 0))
   );
 }
 
-function readRawItem(key: string): { raw: string | null; error: string | null } {
+function readRawItem(key: string): {
+  raw: string | null;
+  error: string | null;
+} {
   try {
     return { raw: window.localStorage.getItem(key), error: null };
   } catch {
     return {
       raw: null,
       error:
-        'Não foi possível acessar o armazenamento local do navegador (localStorage).',
+        "Não foi possível acessar o armazenamento local do navegador (localStorage).",
     };
   }
 }
@@ -157,7 +162,7 @@ function writeRawItem(key: string, value: string): StorageSaveResult {
     return {
       ok: false,
       error:
-        'Falha ao salvar dados localmente. Verifique se o armazenamento do navegador não está cheio ou bloqueado.',
+        "Falha ao salvar dados localmente. Verifique se o armazenamento do navegador não está cheio ou bloqueado.",
     };
   }
 }
@@ -169,13 +174,13 @@ function removeRawItem(key: string): StorageSaveResult {
   } catch {
     return {
       ok: false,
-      error: 'Falha ao remover dados do armazenamento local.',
+      error: "Falha ao remover dados do armazenamento local.",
     };
   }
 }
 
 export function loadPresets(
-  fallback: PresetOption[]
+  fallback: PresetOption[],
 ): StorageLoadResult<PresetOption[]> {
   const { raw, error } = readRawItem(STORAGE_KEYS.presets);
   if (error || raw === null) {
@@ -184,11 +189,7 @@ export function loadPresets(
 
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (
-      Array.isArray(parsed) &&
-      parsed.length > 0 &&
-      parsed.every(isValidPreset)
-    ) {
+    if (Array.isArray(parsed) && parsed.every(isValidPreset)) {
       return { data: parsed, corrupted: false, error: null };
     }
     return { data: fallback, corrupted: true, error: null };
@@ -202,7 +203,7 @@ export function savePresets(presets: PresetOption[]): StorageSaveResult {
 }
 
 export function loadTasks(
-  fallback: StudyTask[]
+  fallback: StudyTask[],
 ): StorageLoadResult<StudyTask[]> {
   const { raw, error } = readRawItem(STORAGE_KEYS.tasks);
   if (error || raw === null) {
@@ -245,7 +246,7 @@ export function loadActiveSession(): StorageLoadResult<ActiveSession | null> {
 }
 
 export function saveActiveSession(
-  session: ActiveSession | null
+  session: ActiveSession | null,
 ): StorageSaveResult {
   if (session === null) {
     return removeRawItem(STORAGE_KEYS.activeSession);
@@ -254,7 +255,7 @@ export function saveActiveSession(
 }
 
 export function loadPreferences(
-  fallback: UiPreferences
+  fallback: UiPreferences,
 ): StorageLoadResult<UiPreferences> {
   const { raw, error } = readRawItem(STORAGE_KEYS.preferences);
   if (error || raw === null) {
@@ -263,24 +264,24 @@ export function loadPreferences(
 
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed)) {
+    if (!isObject(parsed)) {
       return { data: fallback, corrupted: true, error: null };
     }
 
     return {
       data: {
         selectedPresetId:
-          typeof parsed.selectedPresetId === 'string' &&
+          typeof parsed.selectedPresetId === "string" &&
           parsed.selectedPresetId.trim().length > 0
             ? parsed.selectedPresetId
             : fallback.selectedPresetId,
         selectedStateCode:
-          typeof parsed.selectedStateCode === 'string' &&
+          typeof parsed.selectedStateCode === "string" &&
           parsed.selectedStateCode.trim().length > 0
             ? parsed.selectedStateCode
             : fallback.selectedStateCode,
         cycleSwitchEnabled:
-          typeof parsed.cycleSwitchEnabled === 'boolean'
+          typeof parsed.cycleSwitchEnabled === "boolean"
             ? parsed.cycleSwitchEnabled
             : fallback.cycleSwitchEnabled,
       },

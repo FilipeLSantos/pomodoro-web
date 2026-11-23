@@ -124,3 +124,19 @@
     border-radius: 4px;
   }
 }
+
+@media (max-width: 768px) {
+  .bar {
+    height: auto;
+    min-height: 38px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+  }
+  .selectGroup {
+    flex-basis: 100%;
+  }
+  .newButton {
+    flex: 1;
+    justify-content: center;
+  }
+}
